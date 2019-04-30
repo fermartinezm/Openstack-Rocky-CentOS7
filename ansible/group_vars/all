@@ -1,0 +1,17 @@
+checks_dir: /root/.Openstack_checks
+check_MariaDB: .MariaDB_setup_done
+
+rabbitmq_pass: 'openstack'
+rabbitmq_user: 'openstack'
+
+mysql_pass: 'root'
+mysql_user: 'root'
+
+keystone_db: 'keystone'
+keystone_db_user: 'keystone'
+keystone_db_pass: 'keystone'
+
+keystone_user: 'keystone'
+keystone_group: 'keystone'
+
+admin_pass: admin

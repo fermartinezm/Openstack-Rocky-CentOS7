@@ -1,0 +1,25 @@
+---
+- hosts: controller
+  become: true
+  roles:
+    - 1-ntp
+
+- hosts: controller
+  become: true
+  roles:
+    - 2-mariadb
+
+- hosts: controller
+  become: true
+  roles:
+    - 3-rabbitmq-memcached
+
+- hosts: controller
+  become: true
+  roles:
+    - 4-keystone-install
+
+- hosts: controller
+  become: true
+  roles:
+    - 5-keystone-config

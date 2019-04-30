@@ -1,0 +1,39 @@
+---
+- name: Install RabbitMQ and Memcached
+  yum:
+    name: ['rabbitmq-server','memcached']
+    state: present
+    enablerepo: epel
+
+- name: Start and enable RabbitMQ service
+  service:
+    name: rabbitmq-server
+    state: started
+    enabled: yes
+
+- name: Start and enable Memcached service
+  service:
+    name: memcached
+    state: started
+    enabled: yes
+
+- name: Create user for RabbitMQ
+  rabbitmq_user:
+    user: "{{ rabbitmq_user }}"
+    password: "{{ rabbitmq_pass }}"
+    vhost: /
+    configure_priv: .*
+    read_priv: .*
+    write_priv: .*
+    state: present
+
+- name: Open ports firewalld
+  firewalld:
+    port: "{{ item }}"
+    permanent: yes
+    state: enabled
+  with_items:
+    - 11211/tcp
+    - 5672/tcp
+  notify:
+  - Restart firewalld

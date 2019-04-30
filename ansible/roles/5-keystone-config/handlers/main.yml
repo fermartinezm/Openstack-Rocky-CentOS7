@@ -1,0 +1,11 @@
+---
+- name: Restart firewalld
+  service:
+    name: firewalld
+    state: restarted
+
+- name: Start and enable httpd
+  systemd:
+    name: httpd
+    state: started
+    enabled: yes

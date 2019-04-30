@@ -1,0 +1,13 @@
+[control]
+controller      ansible_host=10.6.19.181
+
+[network]
+net             ansible_host=10.6.19.182
+
+[nodes]
+node1           ansible_host=10.6.19.183
+
+[cluster:children]
+control
+network
+nodes
