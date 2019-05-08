@@ -1,0 +1,19 @@
+---
+- name: Install centos-release-openstack-rocky
+  yum:
+    name: centos-release-openstack-rocky
+    state: present
+
+- name: Upgrade all packages
+  yum:
+    name: '*'
+    state: latest
+
+#- name: Reboot
+#  reboot:
+
+- name: Install python-openstackclient and openstack-selinux
+  yum:
+    name: ['openstack-selinux','python-openstackclient']
+    state: present
+

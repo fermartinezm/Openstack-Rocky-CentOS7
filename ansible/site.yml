@@ -1,25 +1,56 @@
 ---
-- hosts: controller
+- hosts: control
   become: true
   roles:
-    - 1-ntp
+    - 01-chrony-controller
 
-- hosts: controller
+#- hosts: nodes
+#  become: true
+#  roles:
+#    - 02-chrony-nodes
+
+- hosts: control
   become: true
   roles:
-    - 2-mariadb
+    - 03-rocky-packages
 
-#- hosts: controller
-#  become: true
-#  roles:
-#    - 3-rabbitmq-memcached
-#
-#- hosts: controller
-#  become: true
-#  roles:
-#    - 4-keystone-install
-#
-#- hosts: controller
-#  become: true
-#  roles:
-#    - 5-keystone-config
+- hosts: control
+  become: true
+  roles:
+    - 04-mariadb
+
+- hosts: control
+  become: true
+  roles:
+    - 05-rabbitmq
+
+- hosts: control
+  become: true
+  roles:
+    - 06-memcached
+
+- hosts: control
+  become: true
+  roles:
+    - 07-etcd
+
+- hosts: control
+  become: true
+  roles:
+    - 08-keystone-install
+
+- hosts: control
+  become: true
+  roles:
+    - 09-keystone-config
+
+- hosts: control
+  become: true
+  roles:
+    - 10-glance-install
+
+- hosts: control
+  become: true
+  roles:
+    - 11-glance-config
+

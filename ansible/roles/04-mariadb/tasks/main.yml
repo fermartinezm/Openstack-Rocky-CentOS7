@@ -1,0 +1,59 @@
+---
+- name: Install mariadb, mariadb-server and python2-PyMySQL
+  yum:
+    name: ['mariadb','mariadb-server','MySQL-python']
+    state: present
+
+- name: Create and edit /etc/my.cnf.d/openstack.cnf file
+  template:
+    src: openstack.cnf.j2
+    dest: /etc/my.cnf.d/openstack.cnf
+    force: no
+
+- name: Start and enable Mariadb service
+  service:
+    name: mariadb.service
+    state: started
+    enabled: yes
+
+- name: Check if root password was set
+  shell: mysql -u root -e "show databases;" 
+  register: test_db
+  ignore_errors: yes
+
+- name: Secure root password if needed
+  mysql_user:
+    name: root
+    password: "{{ mariaDB_pass }}"
+    host: "{{ item }}"
+    state: present
+  with_items:
+    - 127.0.0.1
+    - ::1
+    - localhost
+  when: test_db.stdout.find('test') != -1
+
+- name: Removes all anonymous user accounts if needed
+  mysql_user:
+    login_user: 'root'
+    login_password: '{{ mariaDB_pass }}'
+    name: ''
+    host_all: yes
+    state: absent
+  when: test_db.stdout.find('test') != -1
+
+- name: Removes the MySQL test database
+  mysql_db:
+    login_user: 'root'
+    login_password: '{{ mariaDB_pass }}'
+    db: test
+    state: absent
+  when: test_db.stdout.find('test') != -1
+
+- name: Add mysql service firewalld
+  firewalld:
+    service: mysql
+    permanent: yes
+    state: enabled
+  notify:
+  - Restart firewalld

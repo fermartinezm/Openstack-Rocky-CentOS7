@@ -1,0 +1,30 @@
+---
+- name: Install RabbitMQ
+  yum:
+    name: rabbitmq-server
+    state: present
+
+- name: Start and enable RabbitMQ service
+  service:
+    name: rabbitmq-server
+    state: started
+    enabled: yes
+
+- name: Create user for RabbitMQ
+  rabbitmq_user:
+    user: "{{ rabbitmq_user }}"
+    password: "{{ rabbitmq_pass }}"
+    vhost: /
+    configure_priv: .*
+    read_priv: .*
+    write_priv: .*
+    state: present
+
+- name: Open port firewalld
+  firewalld:
+    port: 5672/tcp
+    permanent: yes
+    state: enabled
+  notify:
+  - Restart firewalld
+

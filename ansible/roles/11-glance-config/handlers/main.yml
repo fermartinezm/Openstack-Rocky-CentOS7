@@ -1,0 +1,12 @@
+---
+- name: Start and enable openstack-glance-api.service
+  systemd:
+    name: openstack-glance-api.service
+    state: started
+    enabled: yes
+
+- name: Start and enable openstack-glance-registry.service
+  systemd:
+    name: openstack-glance-registry.service
+    state: started
+    enabled: yes

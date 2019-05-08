@@ -1,0 +1,31 @@
+---
+- name: Install etcd
+  yum:
+    name: etcd
+    state: present
+
+- name: Check if bck.etecd.conf file exists
+  stat:
+    path: /etc/etcd/bck.etcd.conf
+  register: bck_etcd
+
+- name: Backup etcd.conf file
+  copy:
+    src: /etc/etcd/etcd.conf
+    dest: /etc/etcd/bck.etcd.conf
+    remote_src: yes
+  when: bck_etcd.stat.exists == false
+
+- name: Delete etcd.conf file
+  file:
+    path: /etc/etcd/etcd.conf
+    state: absent
+  when: bck_etcd.stat.exists == false
+
+- name: Create etcd.conf file
+  template:
+    src:  etcd.conf.j2
+    dest: /etc/etcd/etcd.conf
+    force: yes
+  notify:
+  - Start and enable etcd

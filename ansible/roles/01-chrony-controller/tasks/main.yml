@@ -1,0 +1,42 @@
+---
+- name: Install chrony
+  yum:
+    name: chrony
+    state: present
+
+- name: Check if bck.chrony.conf file exists
+  stat: 
+    path: /etc/bck.chrony.conf
+  register: bck_chrony
+
+- name: Backup chrony.conf file
+  copy:
+    src: /etc/chrony.conf
+    dest: /etc/bck.chrony.conf
+    remote_src: yes
+  when: bck_chrony.stat.exists == false
+
+- name: Delete chrony.conf file
+  file:
+    path: /etc/chrony.conf
+    state: absent
+  when: bck_chrony.stat.exists == false
+
+- name: Create chrony.conf
+  template:
+    src:  chrony.conf.j2
+    dest: /etc/chrony.conf
+    force: yes
+  notify:
+  - Start and enable chronyd.service
+
+- name: Modify hosts file
+  lineinfile:
+    dest: /etc/hosts
+    line: "{{ hostvars[item].ansible_host }}   {{ item }}"
+    state: present
+  with_items: "{{ groups.cluster }}"
+
+- name: Change hostname
+  hostname:
+    name: "{{ inventory_hostname }}"
