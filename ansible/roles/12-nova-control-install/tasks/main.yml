@@ -1,0 +1,232 @@
+---
+- name: Check databases
+  shell: "mysql --user={{ mariaDB_user }} --password={{ mariaDB_pass }} -e 'SHOW DATABASES;'"
+  register: check_db
+
+- name: Check permisions for localhost
+  shell: mysql --user={{ mariaDB_user }} --password={{ mariaDB_pass }} -e "SHOW GRANTS for 'nova'@'%';"
+  register: check_priv_local
+  ignore_errors: yes
+
+- name: Check permisions for '%' hosts
+  shell: mysql --user={{ mariaDB_user }} --password={{ mariaDB_pass }} -e "SHOW GRANTS for 'nova'@'localhost';"
+  register: check_priv_hosts
+  ignore_errors: yes
+
+- name: Create nova database
+  mysql_db:
+    login_unix_socket: /var/lib/mysql/mysql.sock
+    login_user: "{{ mariaDB_user }}"
+    login_password: "{{ mariaDB_pass }}"
+    name: "nova"
+    state: present
+  when: check_db.stdout.find('nova\n') == -1
+
+- name: Set mysql user privileges for nova@localhost
+  mysql_user:
+    login_unix_socket: /var/lib/mysql/mysql.sock
+    login_user: "{{ mariaDB_user }}"
+    login_password: "{{ mariaDB_pass }}"
+    name: '{{ nova_db_user }}'
+    priv: 'nova.*:ALL'
+    append_privs: yes
+    password: "{{ nova_db_pass }}"
+    host: 'localhost'
+    state: present
+  when: check_priv_local.stdout.find('`nova`') == -1
+
+- name: Set mysql user privileges for nova@'%'
+  mysql_user:
+    login_unix_socket: /var/lib/mysql/mysql.sock
+    login_user: "{{ mariaDB_user }}"
+    login_password: "{{ mariaDB_pass }}"
+    name: '{{ nova_db_user }}'
+    priv: 'nova.*:ALL'
+    append_privs: yes
+    password: "{{ nova_db_pass }}"
+    host: '%'
+    state: present
+  when: check_priv_hosts.stdout.find('`nova`') == -1
+
+- name: Create nova_api database
+  mysql_db:
+    login_unix_socket: /var/lib/mysql/mysql.sock
+    login_user: "{{ mariaDB_user }}"
+    login_password: "{{ mariaDB_pass }}"
+    name: nova_api
+    state: present
+  when: check_db.stdout.find('nova_api') == -1
+
+- name: Set mysql user privileges for nova_api@localhost
+  mysql_user:
+    login_unix_socket: /var/lib/mysql/mysql.sock
+    login_user: "{{ mariaDB_user }}"
+    login_password: "{{ mariaDB_pass }}"
+    name: '{{ nova_db_user }}'
+    priv: 'nova_api.*:ALL'
+    append_privs: yes
+    password: "{{ nova_db_pass }}"
+    host: 'localhost'
+    state: present
+  when: check_priv_local.stdout.find('nova_api') == -1
+
+- name: Set mysql user privileges for nova_api@'%'
+  mysql_user:
+    login_unix_socket: /var/lib/mysql/mysql.sock
+    login_user: "{{ mariaDB_user }}"
+    login_password: "{{ mariaDB_pass }}"
+    name: '{{ nova_db_user }}'
+    priv: 'nova_api.*:ALL'
+    append_privs: yes
+    password: "{{ nova_db_pass }}"
+    host: '%'
+    state: present
+  when: check_priv_hosts.stdout.find('nova_api') == -1
+
+- name: Create nova_cell0 database
+  mysql_db:
+    login_unix_socket: /var/lib/mysql/mysql.sock
+    login_user: "{{ mariaDB_user }}"
+    login_password: "{{ mariaDB_pass }}"
+    name: "nova_cell0"
+    state: present
+  when: check_db.stdout.find('nova_cell0') == -1
+
+- name: Set mysql user privileges for nova_cell0@localhost
+  mysql_user:
+    login_unix_socket: /var/lib/mysql/mysql.sock
+    login_user: "{{ mariaDB_user }}"
+    login_password: "{{ mariaDB_pass }}"
+    name: '{{ nova_db_user }}'
+    priv: 'nova_cell0.*:ALL'
+    append_privs: yes
+    password: "{{ nova_db_pass }}"
+    host: 'localhost'
+    state: present
+  when: check_priv_local.stdout.find('nova_cell0') == -1
+
+- name: Set mysql user privileges for nova_cell0@'%'
+  mysql_user:
+    login_unix_socket: /var/lib/mysql/mysql.sock
+    login_user: "{{ mariaDB_user }}"
+    login_password: "{{ mariaDB_pass }}"
+    name: '{{ nova_db_user }}'
+    priv: 'nova_cell0.*:ALL'
+    append_privs: yes
+    password: "{{ nova_db_pass }}"
+    host: '%'
+    state: present
+  when: check_priv_hosts.stdout.find('nova_cell0') == -1
+
+- name: Create placement database
+  mysql_db:
+    login_unix_socket: /var/lib/mysql/mysql.sock
+    login_user: "{{ mariaDB_user }}"
+    login_password: "{{ mariaDB_pass }}"
+    name: "placement"
+    state: present
+
+- name: Set mysql user privileges for placement@localhost
+  mysql_user:
+    login_unix_socket: /var/lib/mysql/mysql.sock
+    login_user: "{{ mariaDB_user }}"
+    login_password: "{{ mariaDB_pass }}"
+    name: '{{ placement_db_user }}'
+    priv: 'placement.*:ALL'
+    password: "{{ placement_db_pass }}"
+    host: 'localhost'
+    state: present
+
+- name: Set mysql user privileges for placemet@'%'
+  mysql_user:
+    login_unix_socket: /var/lib/mysql/mysql.sock
+    login_user: "{{ mariaDB_user }}"
+    login_password: "{{ mariaDB_pass }}"
+    name: '{{ placement_db_user }}'
+    priv: 'placement.*:ALL'
+    password: "{{ placement_db_pass }}"
+    host: '%'
+    state: present
+
+- name: Check if nova user already exists
+  shell: "source ~/admin-openrc && openstack user list"
+  register: user_list
+
+- name: Create user nova
+  shell: "source ~/admin-openrc && openstack user create --domain default --password {{ nova_os_pass }} nova"
+  when: user_list.stdout.find('nova') == -1
+
+- name: Check if nova user has admin role
+  shell: "source ~/admin-openrc && openstack role assignment list --names"
+  register: role_asssignment
+
+- name: Add admin role to nova user
+  shell: "source ~/admin-openrc && openstack role add --project service --user nova admin"
+  when: role_asssignment.stdout.find('admin | nova@Default') == -1
+
+- name: Check if nova service already exists
+  shell: "source ~/admin-openrc && openstack service list"
+  register: nova_service
+
+- name: Create nova service
+  shell: 'source ~/admin-openrc && openstack service create --name nova --description "OpenStack Compute" compute'
+  when: nova_service.stdout.find('compute') == -1
+
+- name: Check if nova endpoints already exist
+  shell: "source ~/admin-openrc && openstack endpoint list"
+  register: nova_endpoint
+
+- name: Create nova public endpoint
+  shell: "source ~/admin-openrc && openstack endpoint create --region RegionOne compute public http://{{ hostvars[groups['control'][0]].ansible_host }}:8774/v2.1"
+  when: nova_endpoint.stdout.find('public    | http://10.6.19.181:8774') == -1
+
+- name: Create nova internal endpoint
+  shell: "source ~/admin-openrc && openstack endpoint create --region RegionOne compute internal http://{{ hostvars[groups['control'][0]].ansible_host }}:8774/v2.1"
+  when: nova_endpoint.stdout.find('internal  | http://10.6.19.181:8774') == -1
+
+- name: Create nova admin endpoint
+  shell: "source ~/admin-openrc && openstack endpoint create --region RegionOne compute admin http://{{ hostvars[groups['control'][0]].ansible_host }}:8774/v2.1"
+  when: nova_endpoint.stdout.find('admin     | http://10.6.19.181:8774') == -1
+
+- name: Check if placement user already exists
+  shell: "source ~/admin-openrc && openstack user list"
+  register: placement_user
+
+- name: Create placement user
+  shell: "source ~/admin-openrc && openstack user create --domain default --password {{ placement_os_pass }} placement"
+  when: placement_user.stdout.find('placement') == -1
+
+- name: Check if placement user has admin role
+  shell: "source ~/admin-openrc && openstack role assignment list --names"
+  register: placement_role
+
+- name: Add admin role to placement user
+  shell: "source ~/admin-openrc && openstack role add --project service --user placement admin"
+  when: placement_role.stdout.find('admin | placement@Default') == -1
+
+- name: Check if placement service already exists
+  shell: "source ~/admin-openrc && openstack service list"
+  register: placement_service
+
+- name: Create placement service
+  shell: 'source ~/admin-openrc && openstack service create --name placement --description "Placement API" placement'
+  when: placement_service.stdout.find('placement') == -1
+
+- name: Create placement public endpoint
+  shell: "source ~/admin-openrc && openstack endpoint create --region RegionOne placement public http://{{ hostvars[groups['control'][0]].ansible_host }}:8778"
+  when: nova_endpoint.stdout.find('public    | http://10.6.19.181:8778') == -1
+
+- name: Create placement internal endpoint
+  shell: "source ~/admin-openrc && openstack endpoint create --region RegionOne placement internal http://{{ hostvars[groups['control'][0]].ansible_host }}:8778"
+  when: nova_endpoint.stdout.find('internal  | http://10.6.19.181:8778') == -1
+
+- name: Create placement admin endpoint
+  shell: "source ~/admin-openrc && openstack endpoint create --region RegionOne placement admin http://{{ hostvars[groups['control'][0]].ansible_host }}:8778"
+  when: nova_endpoint.stdout.find('admin     | http://10.6.19.181:8778') == -1
+
+- name: Install Nova
+  yum:
+    name:  ['openstack-nova-api','openstack-nova-conductor','openstack-nova-console','openstack-nova-novncproxy','openstack-nova-scheduler','openstack-nova-placement-api']
+    state: present
+    enablerepo: centos-openstack-rocky
+

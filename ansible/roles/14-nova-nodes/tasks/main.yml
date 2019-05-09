@@ -1,0 +1,54 @@
+---
+- name: Install nova
+  yum:
+    name:  openstack-nova-compute
+    state: present
+    enablerepo: centos-openstack-rocky
+
+- name: Check bck.nova.conf file exists
+  stat:
+    path: /etc/nova/bck.nova.conf
+  register: bck_nova
+
+- name: Backup nova.conf file
+  copy:
+    src: /etc/nova/nova.conf
+    dest: /etc/nova/bck.nova.conf
+    remote_src: yes
+  when: bck_nova.stat.exists == false
+
+- name: Delete nova.conf file
+  file:
+    path: /etc/nova/nova.conf
+    state: absent
+  when: bck_nova.stat.exists == false
+
+- name: Create nova.conf file
+  template:
+    src:  nova.conf.j2
+    dest: /etc/nova/nova.conf
+    owner: root
+    group: nova
+    mode: 0640
+    force: yes
+
+- name: Start and enable libvirtd.service
+  service:
+    name: libvirtd.service
+    state: started
+    enabled: yes
+
+- name: Start and enable openstack-nova-compute.service
+  service:
+    name: openstack-nova-compute.service
+    state: started
+    enabled: yes
+
+- name: Open ports firewalld
+  firewalld:
+    port: 5900-5999/tcp
+    permanent: yes
+    state: enabled
+  notify:
+  - Restart firewalld
+

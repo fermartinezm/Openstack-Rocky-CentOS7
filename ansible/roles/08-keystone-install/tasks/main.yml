@@ -4,7 +4,7 @@
     login_unix_socket: /var/lib/mysql/mysql.sock
     login_user: "{{ mariaDB_user }}"
     login_password: "{{ mariaDB_pass }}"
-    name: "{{ keystone_db }}"
+    name: "keystone"
     state: present
 
 - name: Set mysql user privileges for keystone@localhost
@@ -12,8 +12,8 @@
     login_unix_socket: /var/lib/mysql/mysql.sock
     login_user: "{{ mariaDB_user }}"
     login_password: "{{ mariaDB_pass }}"
-    name: "{{ keystone_db }}"
-    priv: '{{ keystone_db_user }}.*:ALL'
+    name: "{{ keystone_db_user }}"
+    priv: 'keystone.*:ALL'
     password: "{{ keystone_db_pass }}"
     host: 'localhost'
     state: present
@@ -23,8 +23,8 @@
     login_unix_socket: /var/lib/mysql/mysql.sock
     login_user: "{{ mariaDB_user }}"
     login_password: "{{ mariaDB_pass }}"
-    name: "{{ keystone_db }}"
-    priv: '{{ keystone_db_user }}.*:ALL'
+    name: "{{ keystone_db_user }}"
+    priv: 'keystone.*:ALL'
     password: "{{ keystone_db_pass }}"
     host: '%'
 

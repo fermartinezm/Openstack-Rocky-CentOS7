@@ -4,12 +4,12 @@
   roles:
     - 01-chrony-controller
 
-#- hosts: nodes
-#  become: true
-#  roles:
-#    - 02-chrony-nodes
+- hosts: nodes
+  become: true
+  roles:
+    - 02-chrony-nodes
 
-- hosts: control
+- hosts: cluster
   become: true
   roles:
     - 03-rocky-packages
@@ -54,3 +54,32 @@
   roles:
     - 11-glance-config
 
+- hosts: control
+  become: true
+  roles:
+    - 12-nova-control-install
+
+- hosts: control
+  become: true
+  roles:
+    - 13-nova-control-config
+
+- hosts: nodes
+  become: true
+  roles:
+    - 14-nova-nodes
+
+- hosts: control
+  become: true
+  roles:
+    - 15-nodes-discover
+
+- hosts: control
+  become: true
+  roles:
+    - 16-ovs-install
+
+- hosts: control
+  become: true
+  roles:
+    - 17-ovs-config

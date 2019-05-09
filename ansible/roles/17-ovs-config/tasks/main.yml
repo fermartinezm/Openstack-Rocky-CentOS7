@@ -1,0 +1,67 @@
+---
+- name: Edit /etc/resolv.conf
+  lineinfile:
+    path: /etc/resolv.conf
+    line: "nameserver 8.8.8.8"
+    insertafter: EOF
+    state: present
+
+- name: Check bck.ifcfg-{{ interface0 }} file exists
+  stat:
+    path: /etc/sysconfig/network-scripts/bck.ifcfg-{{ interface0 }}
+  register: bck_interface
+
+- name: Backup file ifcfg-{{ interface0 }}
+  copy:
+    remote_src: yes
+    src: /etc/sysconfig/network-scripts/ifcfg-{{ interface0 }}
+    dest: /etc/sysconfig/network-scripts/bck.ifcfg-{{ interface0 }}
+    mode: 0644
+  when: bck_interface.stat.exists == false
+
+- name: Delete file ifcfg-{{ interface0 }}
+  file:
+    path: /etc/sysconfig/network-scripts/ifcfg-{{ interface0 }}
+    state: absent
+  when: bck_interface.stat.exists == false
+
+- name: Check bck.ifcfg-{{ interface1 }} file exists
+  stat:
+    path: /etc/sysconfig/network-scripts/bck.ifcfg-{{ interface1 }}
+  register: bck_interface
+
+- name: Backup file ifcfg-{{ interface1 }}
+  copy:
+    remote_src: yes
+    src: /etc/sysconfig/network-scripts/ifcfg-{{ interface1 }}
+    dest: /etc/sysconfig/network-scripts/bck.ifcfg-{{ interface1 }}
+    mode: 0644
+  when: bck_interface.stat.exists == false
+
+- name: Delete file ifcfg-{{ interface1 }}
+  file:
+    path: /etc/sysconfig/network-scripts/ifcfg-{{ interface1 }}
+    state: absent
+  when: bck_interface.stat.exists == false
+
+- name: Create and edit file ifcfg-{{ interface0 }}
+  template:
+    src: interface0.cnf.j2
+    dest: /etc/sysconfig/network-scripts/ifcfg-{{ interface0 }}
+
+- name: Create and edit file ifcfg-{{ interface1 }}
+  template:
+    src: interface1.cnf.j2
+    dest: /etc/sysconfig/network-scripts/ifcfg-{{ interface1 }}
+
+- name: Create and edit file ifcfg-{{ bridge_in }}
+  template:
+    src: br-in.cnf.j2
+    dest: /etc/sysconfig/network-scripts/ifcfg-{{ bridge_in }}
+
+- name: Create and edit file ifcfg-{{ bridge_ex }}
+  template:
+    src: br-ex.cnf.j2
+    dest: /etc/sysconfig/network-scripts/ifcfg-{{ bridge_ex }}
+  notify:
+  - Restart network

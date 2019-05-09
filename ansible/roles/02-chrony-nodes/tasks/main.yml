@@ -12,13 +12,7 @@
   notify:
   - Start and enable chronyd.service
 
-- name: Modify hosts file
-  lineinfile:
-    dest: /etc/hosts
-    line: "{{ hostvars[item].ansible_host }}   {{ item }}"
-    state: present
-  with_items: "{{ groups.cluster }}"
-
-- name: Change hostnames
+- name: Change hostname
   hostname:
     name: "{{ inventory_hostname }}"
+

@@ -1,27 +1,47 @@
-checks_dir: /root/.Openstack_checks
-check_MariaDB: .MariaDB_setup_done
-check_keystoneDB: .KeystoneDB_done
-check_glanceDB: .glanceDB_done
-check_glance: .glanceOS_done
-
 mariaDB_user: 'root'
 mariaDB_pass: 'root'
+
 
 rabbitmq_pass: 'openstack'
 rabbitmq_user: 'openstack'
 
-keystone_db: 'keystone'
-keystone_db_user: 'keystone'
-keystone_db_pass: 'keystone'
+
+admin_pass: admin
+
 
 keystone_user: 'keystone'
 keystone_group: 'keystone'
 
-glance_db: 'glance'
+
+keystone_db_user: 'keystone'
+keystone_db_pass: 'keystone'
+
 glance_db_user: 'glance'
 glance_db_pass: 'glance'
 
-glance_pass: 'glance'
+nova_db_user: 'nova'
+nova_db_pass: 'nova'
 
-admin_pass: admin
+placement_db_user: 'placement'
+placement_db_pass: 'placement'
 
+
+glance_os_pass: 'glance'
+nova_os_pass: 'nova'
+placement_os_pass: 'placement'
+
+
+# Openvswitch
+ovs_version: 2.11.0
+
+bridge_ex: "br-ex"
+br_ex_address: 10.6.19.181
+br_ex_netmask: 255.255.248.0
+br_ex_gateway: 10.6.16.2
+
+bridge_in: "br-in"
+br_in_address: 192.168.1.181
+br_in_netmask: 255.255.255.0
+
+interface0: "eth0"
+interface1: "eth1"

@@ -10,7 +10,7 @@
     state: started
     enabled: yes
 
-- name: check if bck.memcached file exists
+- name: Check if bck.memcached file exists
   stat:
     path: /etc/sysconfig/bck.memcached
   register: bck_memcached

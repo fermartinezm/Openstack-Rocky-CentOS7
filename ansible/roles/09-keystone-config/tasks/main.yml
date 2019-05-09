@@ -1,5 +1,4 @@
 ---
-
 - name: Check if bck.keystone.conf file exists
   stat:
     path: /etc/keystone/bck.keystone.conf
@@ -23,7 +22,7 @@
   lineinfile:
     path: /etc/keystone/keystone.conf
     insertafter: '#connection = <None>'
-    line: 'connection = mysql+pymysql://{{ keystone_db_user }}:{{ keystone_db_pass }}@{{ hostvars[item].ansible_host }}/{{ keystone_db }}'
+    line: 'connection = mysql+pymysql://{{ keystone_db_user }}:{{ keystone_db_pass }}@{{ hostvars[item].ansible_host }}/keystone
   with_items: "{{ groups.control }}"
 
 - name: Modify keystone.conf file (3)
@@ -107,6 +106,6 @@
   shell: "source ~/admin-openrc && openstack project list"
   register: projects
 
-- name: Create project {{ project_service }} in Openstack
+- name: Create project service in Openstack
   shell: 'source ~/admin-openrc && openstack project create --domain default --description "Service Project" service'
   when: projects.stdout.find('service') == -1

@@ -2,8 +2,8 @@
 controller      ansible_host=10.6.19.181
 
 [nodes]
-node1           ansible_host=10.6.19.182
-node2           ansible_host=10.6.19.183
+node1           ansible_host=10.6.19.183
+#node2           ansible_host=10.6.19.183
 
 [cluster:children]
 control

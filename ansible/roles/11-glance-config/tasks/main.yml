@@ -60,6 +60,23 @@
     glance-manage db_sync
   args:
     executable: /bin/bash
+
+- name: Start and enable httpd service
+  service:
+    name: "{{ item }}"
+    state: started
+    enabled: yes
+  with_items:
+    - openstack-glance-api.service
+    - openstack-glance-registry.service
+
+- name: Open ports firewalld
+  firewalld:
+    port: "{{ item }}"
+    permanent: yes
+    state: enabled
+  with_items:
+    - 9191/tcp
+    - 9292/udp
   notify:
-    - Start and enable openstack-glance-api.service
-    - Start and enable openstack-glance-registry.service
+  - Restart firewalld

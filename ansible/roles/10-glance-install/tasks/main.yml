@@ -4,7 +4,7 @@
     login_unix_socket: /var/lib/mysql/mysql.sock
     login_user: "{{ mariaDB_user }}"
     login_password: "{{ mariaDB_pass }}"
-    name: "{{ glance_db }}"
+    name: "glance"
     state: present
 
 - name: Set mysql user privileges for glance@localhost
@@ -12,8 +12,8 @@
     login_unix_socket: /var/lib/mysql/mysql.sock
     login_user: "{{ mariaDB_user }}"
     login_password: "{{ mariaDB_pass }}"
-    name: "{{ glance_db }}"
-    priv: '{{ glance_db_user }}.*:ALL'
+    name: '{{ glance_db_user}}'
+    priv: 'glance.*:ALL'
     password: "{{ glance_db_pass }}"
     host: 'localhost'
     state: present
@@ -23,8 +23,8 @@
     login_unix_socket: /var/lib/mysql/mysql.sock
     login_user: "{{ mariaDB_user }}"
     login_password: "{{ mariaDB_pass }}"
-    name: "{{ glance_db }}"
-    priv: '{{ glance_db_user }}.*:ALL'
+    name: '{{ glance_db_user }}'
+    priv: 'glance.*:ALL'
     password: "{{ glance_db_pass }}"
     host: '%'
     state: present
@@ -34,14 +34,15 @@
   register: user_list
 
 - name: Create user glance
-  shell: "source ~/admin-openrc && openstack user create --domain default --project service --password {{ glance_pass }} glance"
+  shell: "source ~/admin-openrc && openstack user create --domain default --password {{ glance_os_pass }} glance"
   when: user_list.stdout.find('glance') == -1
+# --project service
 
 - name: Check if glance user has admin role
   shell: "source ~/admin-openrc && openstack role assignment list --names"
   register: role_asssignment
 
-- name: Add role admin to glance user
+- name: Add admin role to glance user
   shell: "source ~/admin-openrc && openstack role add --project service --user glance admin"
   when: role_asssignment.stdout.find('admin | glance@Default') == -1
 
@@ -61,7 +62,7 @@
   shell: "source ~/admin-openrc && openstack endpoint create --region RegionOne image public http://{{ hostvars[groups['control'][0]].ansible_host }}:9292"
   when: glance_endpoint.stdout.find('public    | http://10.6.19.181:9292') == -1
 
-- name: Create glance internal endpoints
+- name: Create glance internal endpoint
   shell: "source ~/admin-openrc && openstack endpoint create --region RegionOne image internal http://{{ hostvars[groups['control'][0]].ansible_host }}:9292"
   when: glance_endpoint.stdout.find('internal  | http://10.6.19.181:9292') == -1
 

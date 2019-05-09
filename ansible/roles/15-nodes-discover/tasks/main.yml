@@ -1,0 +1,12 @@
+---
+- name: Wait 10s
+  pause:
+    seconds: 10
+
+- name: Discover computer host
+  become: yes
+  become_user: nova
+  shell: >
+    nova-manage cell_v2 discover_hosts --verbose
+  args:
+    executable: /bin/bash
