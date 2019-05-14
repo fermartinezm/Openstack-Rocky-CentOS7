@@ -79,35 +79,42 @@
   args:
     executable: /bin/bash
 
-- name: Start and enable openstack-nova-api.service 
+- name: Start and enable nova services
   service:
-    name: openstack-nova-api.service
+    name: "{{ item }}"
+#    name: openstack-nova-api.service
     state: started
     enabled: yes
+  with_items:
+    - openstack-nova-api.service
+    - openstack-nova-consoleauth
+    - openstack-nova-scheduler.service
+    - openstack-nova-conductor.service
+    - openstack-nova-novncproxy.service
 
-- name: Start and enable openstack-nova-consoleauth service
-  service:
-    name: openstack-nova-consoleauth
-    state: started
-    enabled: yes
-
-- name: Start and enable openstack-nova-scheduler.service 
-  service:
-    name: openstack-nova-scheduler.service
-    state: started
-    enabled: yes
-
-- name: Start and enable openstack-nova-conductor.service 
-  service:
-    name: openstack-nova-conductor.service
-    state: started
-    enabled: yes
-
-- name: Start and enable openstack-nova-novncproxy.service
-  service:
-    name: openstack-nova-novncproxy.service
-    state: started
-    enabled: yes
+#- name: Start and enable openstack-nova-consoleauth service
+#  service:
+#    name: openstack-nova-consoleauth
+#    state: started
+#    enabled: yes
+#
+#- name: Start and enable openstack-nova-scheduler.service 
+#  service:
+#    name: openstack-nova-scheduler.service
+#    state: started
+#    enabled: yes
+#
+#- name: Start and enable openstack-nova-conductor.service 
+#  service:
+#    name: openstack-nova-conductor.service
+#    state: started
+#    enabled: yes
+#
+#- name: Start and enable openstack-nova-novncproxy.service
+#  service:
+#    name: openstack-nova-novncproxy.service
+#    state: started
+#    enabled: yes
 
 - name: Open ports firewalld
   firewalld:

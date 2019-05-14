@@ -25,10 +25,13 @@ nova_db_pass: 'nova'
 placement_db_user: 'placement'
 placement_db_pass: 'placement'
 
+neutron_db_user: 'neutron'
+neutron_db_pass: 'neutron'
 
 glance_os_pass: 'glance'
 nova_os_pass: 'nova'
 placement_os_pass: 'placement'
+neutron_os_pass: 'neutron'
 
 
 # Openvswitch

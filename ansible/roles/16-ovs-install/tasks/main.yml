@@ -63,7 +63,7 @@
 
 - name: Check if openvswitch-{{ ovs_version }}.tar.gz file exists
   stat:
-    path: /home/ovs/rpmbuild/SOURCES/openvswitch-{{ ovs_version }}.tar.gz
+    path: /home/ovs/rpmbuild/RPMS/x86_64/openvswitch-{{ ovs_version }}-1.el7.x86_64.rpm
   register: ovs_rpm
 
 - name: Create .rpm file to install openvswitch

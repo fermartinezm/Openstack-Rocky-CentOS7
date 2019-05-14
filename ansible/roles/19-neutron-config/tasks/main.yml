@@ -1,0 +1,230 @@
+---
+- name: Check bck.neutron.conf file exists
+  stat:
+    path: /etc/neutron/bck.neutron.conf
+  register: bck_neutron
+
+- name: Backup neutron.conf file
+  copy:
+    src: /etc/neutron/neutron.conf
+    dest: /etc/neutron/bck.neutron.conf
+    remote_src: yes
+  when: bck_neutron.stat.exists == false
+
+- name: Delete neutron.conf file
+  file:
+    path: /etc/neutron/neutron.conf
+    state: absent
+  when: bck_neutron.stat.exists == false
+
+- name: Create neutron.conf file
+  template:
+    src:  neutron.conf.j2
+    dest: /etc/neutron/neutron.conf
+    owner: root
+    group: neutron
+    mode: 0640
+    force: yes
+
+- name: Check bck.l3_agent.ini file exists
+  stat:
+    path: /etc/neutron/bck.l3_agent.ini
+  register: bck_l3_agent
+
+- name: Backup l3_agent.ini file
+  copy:
+    src: /etc/neutron/l3_agent.ini
+    dest: /etc/neutron/bck.l3_agent.ini
+    remote_src: yes
+  when: bck_l3_agent.stat.exists == false
+
+- name: Modify l3_agent.ini file
+  lineinfile:
+    path: /etc/neutron/l3_agent.ini
+    insertafter: '#interface_driver'
+    line: 'interface_driver = openvswitch'
+
+- name: Check bck.dhcp_agent.ini file exists
+  stat:
+    path: /etc/neutron/bck.dhcp_agent.ini
+  register: bck_dhcp_agent
+
+- name: Backup dhcp_agent.ini file
+  copy:
+    src: /etc/neutron/dhcp_agent.ini
+    dest: /etc/neutron/bck.dhcp_agent.ini
+    remote_src: yes
+  when: bck_dhcp_agent.stat.exists == false
+
+- name: Modify dhcp_agent.ini file (1)
+  lineinfile:
+    path: /etc/neutron/dhcp_agent.ini
+    insertafter: '#interface_driver'
+    line: 'interface_driver = openvswitch'
+
+- name: Modify dhcp_agent.ini file (2)
+  lineinfile:
+    path: /etc/neutron/dhcp_agent.ini
+    insertafter: '#dhcp_driver'
+    line: 'dhcp_driver = neutron.agent.linux.dhcp.Dnsmasq'
+
+- name: Modify dhcp_agent.ini file (3)
+  lineinfile:
+    path: /etc/neutron/dhcp_agent.ini
+    insertafter: '#enable_isolated_metadata'
+    line: 'enable_isolated_metadata = true'
+
+- name: Check bck.ml2_conf.ini file exists
+  stat:
+    path: /etc/neutron/plugins/ml2/bck.ml2_conf.ini
+  register: bck_ml2_conf
+
+- name: Backup ml2_conf.ini file
+  copy:
+    src: /etc/neutron/plugins/ml2/ml2_conf.ini
+    dest: /etc/neutron/plugins/ml2/bck.ml2_conf.ini
+    remote_src: yes
+  when: bck_ml2_conf.stat.exists == false
+
+- name: Modify ml2_conf.ini file (1)
+  lineinfile:
+    path: /etc/neutron/plugins/ml2/ml2_conf.ini
+    insertafter: '#type_drivers = '
+    line: 'type_drivers = flat,vlan,gre,vxlan'
+
+- name: Modify ml2_conf.ini file (2)
+  lineinfile:
+    path: /etc/neutron/plugins/ml2/ml2_conf.ini
+    insertafter: '#tenant_network_types ='
+    line: 'tenant_network_types ='
+
+- name: Modify ml2_conf.ini file (3)
+  lineinfile:
+    path: /etc/neutron/plugins/ml2/ml2_conf.ini
+    insertafter: '#mechanism_drivers ='
+    line: 'mechanism_drivers = openvswitch,l2population'
+
+- name: Modify ml2_conf.ini file (4)
+  lineinfile:
+    path: /etc/neutron/plugins/ml2/ml2_conf.ini
+    insertafter: '#extension_drivers ='
+    line: 'extension_drivers = port_security'
+
+- name: Check bck.openvswitch_agent.ini file exists
+  stat:
+    path: /etc/neutron/plugins/ml2/bck.openvswitch_agent.ini
+  register: bck_openvswitch
+
+- name: Backup openvswitch_agent.ini file
+  copy:
+    src: /etc/neutron/plugins/ml2/openvswitch_agent.ini
+    dest: /etc/neutron/plugins/ml2/bck.openvswitch_agent.ini
+    remote_src: yes
+  when: bck_openvswitch.stat.exists == false
+
+- name: Modify openvswitch_agent.ini file (1)
+  lineinfile:
+    path: /etc/neutron/plugins/ml2/openvswitch_agent.ini
+    insertafter: '#firewall_driver ='
+    line: 'firewall_driver = openvswitch'
+
+- name: Modify openvswitch_agent.ini file (2)
+  lineinfile:
+    path: /etc/neutron/plugins/ml2/openvswitch_agent.ini
+    insertafter: '#enable_security_group ='
+    line: 'enable_security_group = true'
+
+- name: Modify openvswitch_agent.ini file (3)
+  lineinfile:
+    path: /etc/neutron/plugins/ml2/openvswitch_agent.ini
+    insertafter: '#enable_ipset ='
+    line: 'enable_ipset = true'
+
+- name: Modify nova.conf file (1)
+  lineinfile:
+     path: /etc/nova/nova.conf
+     insertafter: 'use_neutron = true'
+     line: 'linuxnet_interface_driver = nova.network.linux_net.LinuxOVSInterfaceDriver'
+
+- name: Modify nova.conf file (2)
+  lineinfile:
+     path: /etc/nova/nova.conf
+     insertafter: 'use_neutron = true'
+     line: 'vif_plugging_timeout = 300'
+
+- name: Modify nova.conf file (3)
+  lineinfile:
+     path: /etc/nova/nova.conf
+     insertafter: 'use_neutron = true'
+     line: 'vif_plugging_is_fatal = True'
+
+- name: Modify nova.conf file (4)
+  blockinfile:
+    path: /etc/nova/nova.conf
+    block: |
+      [neutron]
+      auth_url = http://{{ hostvars[groups['control'][0]].ansible_host }}:5000
+      auth_type = password
+      project_domain_name = default
+      user_domain_name = default
+      region_name = RegionOne
+      project_name = service
+      username = neutron
+      password = {{ neutron_os_pass }}
+      service_metadata_proxy = True
+      metadata_proxy_shared_secret = metadata_secret
+
+- name: Open ports firewalld for neutron
+  firewalld:
+    port: 9696/tcp
+    permanent: yes
+    state: enabled
+  notify:
+  - Restart firewalld
+
+- name: Restart openvswitch service
+  service:
+    name: openvswitch
+    state: started
+    enabled: yes
+
+#- name: Check if /etc/neutron/plugin.ini/ml2_conf.ini exists
+#  command: "ll /etc/neutron/"
+#  register: stat_result
+
+#- name: Create symbolic link
+#  command: >
+#    ln -s /etc/neutron/plugins/ml2/ml2_conf.ini /etc/neutron/plugin.ini
+#  when: projects.stdout.find('plugin.ini -> /etc/neutron/plugins/ml2/ml2_conf.ini') == -1
+
+#- name: Check if /etc/neutron/plugin.ini/ml2_conf.ini exists
+#  stat:
+#    path: /etc/neutron/plugin.ini/ml2_conf.ini
+#  register: stat_result
+#
+#- name: Create symbolic link ml2_conf.ini
+#  command: >
+#    ln -s /etc/neutron/plugins/ml2/ml2_conf.ini /etc/neutron/plugin.ini 
+#  when: stat_result.stat.exists == False
+
+- name: Upgrade head neutron
+  become: yes
+  become_user: neutron
+  changed_when: false
+  shell: >
+    neutron-db-manage --config-file /etc/neutron/neutron.conf --config-file /etc/neutron/plugin.ini upgrade head
+  args:
+    executable: /bin/bash
+
+- name: Start and enable neutron services
+  service:
+    name: "{{ item }}"
+    state: started
+    enabled: yes
+  with_items:
+    - neutron-dhcp-agent
+    - neutron-l3-agent
+    - neutron-metadata-agent
+    - neutron-openvswitch-agent
+  notify:
+    - Restart nova-api service

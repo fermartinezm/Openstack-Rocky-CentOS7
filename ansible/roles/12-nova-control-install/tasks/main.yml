@@ -172,21 +172,21 @@
   shell: 'source ~/admin-openrc && openstack service create --name nova --description "OpenStack Compute" compute'
   when: nova_service.stdout.find('compute') == -1
 
-- name: Check if nova endpoints already exist
+- name: Check if endpoints already exist
   shell: "source ~/admin-openrc && openstack endpoint list"
-  register: nova_endpoint
+  register: endpoint
 
 - name: Create nova public endpoint
   shell: "source ~/admin-openrc && openstack endpoint create --region RegionOne compute public http://{{ hostvars[groups['control'][0]].ansible_host }}:8774/v2.1"
-  when: nova_endpoint.stdout.find('public    | http://10.6.19.181:8774') == -1
+  when: endpoint.stdout.find('public    | http://10.6.19.181:8774') == -1
 
 - name: Create nova internal endpoint
   shell: "source ~/admin-openrc && openstack endpoint create --region RegionOne compute internal http://{{ hostvars[groups['control'][0]].ansible_host }}:8774/v2.1"
-  when: nova_endpoint.stdout.find('internal  | http://10.6.19.181:8774') == -1
+  when: endpoint.stdout.find('internal  | http://10.6.19.181:8774') == -1
 
 - name: Create nova admin endpoint
   shell: "source ~/admin-openrc && openstack endpoint create --region RegionOne compute admin http://{{ hostvars[groups['control'][0]].ansible_host }}:8774/v2.1"
-  when: nova_endpoint.stdout.find('admin     | http://10.6.19.181:8774') == -1
+  when: endpoint.stdout.find('admin     | http://10.6.19.181:8774') == -1
 
 - name: Check if placement user already exists
   shell: "source ~/admin-openrc && openstack user list"
@@ -214,19 +214,18 @@
 
 - name: Create placement public endpoint
   shell: "source ~/admin-openrc && openstack endpoint create --region RegionOne placement public http://{{ hostvars[groups['control'][0]].ansible_host }}:8778"
-  when: nova_endpoint.stdout.find('public    | http://10.6.19.181:8778') == -1
+  when: endpoint.stdout.find('public    | http://10.6.19.181:8778') == -1
 
 - name: Create placement internal endpoint
   shell: "source ~/admin-openrc && openstack endpoint create --region RegionOne placement internal http://{{ hostvars[groups['control'][0]].ansible_host }}:8778"
-  when: nova_endpoint.stdout.find('internal  | http://10.6.19.181:8778') == -1
+  when: endpoint.stdout.find('internal  | http://10.6.19.181:8778') == -1
 
 - name: Create placement admin endpoint
   shell: "source ~/admin-openrc && openstack endpoint create --region RegionOne placement admin http://{{ hostvars[groups['control'][0]].ansible_host }}:8778"
-  when: nova_endpoint.stdout.find('admin     | http://10.6.19.181:8778') == -1
+  when: endpoint.stdout.find('admin     | http://10.6.19.181:8778') == -1
 
 - name: Install Nova
   yum:
     name:  ['openstack-nova-api','openstack-nova-conductor','openstack-nova-console','openstack-nova-novncproxy','openstack-nova-scheduler','openstack-nova-placement-api']
     state: present
     enablerepo: centos-openstack-rocky
-
