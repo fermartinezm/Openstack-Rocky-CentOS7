@@ -1,0 +1,70 @@
+---
+- name: Create glance database
+  mysql_db:
+    login_unix_socket: /var/lib/mysql/mysql.sock
+    login_user: "{{ mariaDB_user }}"
+    login_password: "{{ mariaDB_pass }}"
+    name: '{{ glance_db }}'
+    state: present
+
+- name: Set mysql user privileges on glance to glance@localhost
+  mysql_user:
+    login_unix_socket: /var/lib/mysql/mysql.sock
+    login_user: "{{ mariaDB_user }}"
+    login_password: "{{ mariaDB_pass }}"
+    name: '{{ glance_db_user}}'
+    priv: '{{ glance_db }}.*:ALL'
+    password: "{{ glance_db_pass }}"
+    host: 'localhost'
+    state: present
+
+- name: Set mysql user privileges on glance to glance@'%'
+  mysql_user:
+    login_unix_socket: /var/lib/mysql/mysql.sock
+    login_user: "{{ mariaDB_user }}"
+    login_password: "{{ mariaDB_pass }}"
+    name: '{{ glance_db_user }}'
+    priv: '{{ glance_db }}.*:ALL'
+    password: "{{ glance_db_pass }}"
+    host: '%'
+    state: present
+
+- name: Check if glance user already exists
+  shell: "source ~/admin-openrc && openstack user list"
+  register: user_list
+
+- name: Create user glance
+  shell: "source ~/admin-openrc && openstack user create --domain default --password {{ glance_os_pass }} glance"
+  when: user_list.stdout.find('glance') == -1
+
+- name: Check if glance user has admin role
+  shell: "source ~/admin-openrc && openstack role assignment list --names"
+  register: role_asssignment
+
+- name: Add admin role to glance user
+  shell: "source ~/admin-openrc && openstack role add --project service --user glance admin"
+  when: role_asssignment.stdout.find('admin | glance@Default') == -1
+
+- name: Check if glance service already exists
+  shell: "source ~/admin-openrc && openstack service list"
+  register: glance_service
+
+- name: Create glance service
+  shell: 'source ~/admin-openrc && openstack service create --name glance --description "OpenStack Image" image'
+  when: glance_service.stdout.find('image') == -1
+
+- name: Check if glance endpoints already exist
+  shell: "source ~/admin-openrc && openstack endpoint list"
+  register: glance_endpoint
+
+- name: Create glance public endpoint
+  shell: "source ~/admin-openrc && openstack endpoint create --region RegionOne image public http://{{ hostvars[groups['control'][0]].ansible_host }}:9292"
+  when: glance_endpoint.stdout.find('public    | http://10.6.19.181:9292') == -1
+
+- name: Create glance internal endpoint
+  shell: "source ~/admin-openrc && openstack endpoint create --region RegionOne image internal http://{{ hostvars[groups['control'][0]].ansible_host }}:9292"
+  when: glance_endpoint.stdout.find('internal  | http://10.6.19.181:9292') == -1
+
+- name: Create glance admin endpoint
+  shell: "source ~/admin-openrc && openstack endpoint create --region RegionOne image admin http://{{ hostvars[groups['control'][0]].ansible_host }}:9292"
+  when: glance_endpoint.stdout.find('admin     | http://10.6.19.181:9292') == -1

@@ -32,11 +32,11 @@
     mode: 0640
     force: yes
 
-- name: Start and enable libvirtd.service
-  service:
-    name: libvirtd.service
-    state: started
-    enabled: yes
+- name: Install nova
+  yum:
+    name: openstack-selinux
+    state: present
+    enablerepo: centos-openstack-rocky
 
 - name: Start and enable openstack-nova-compute.service
   service:
@@ -51,4 +51,3 @@
     state: enabled
   notify:
   - Restart firewalld
-

@@ -1,0 +1,70 @@
+---
+- name: Create neutron database
+  mysql_db:
+    login_unix_socket: /var/lib/mysql/mysql.sock
+    login_user: "{{ mariaDB_user }}"
+    login_password: "{{ mariaDB_pass }}"
+    name: '{{ neutron_db }}'
+    state: present
+
+- name: Set mysql user privileges on neutron to neutron@localhost
+  mysql_user:
+    login_unix_socket: /var/lib/mysql/mysql.sock
+    login_user: "{{ mariaDB_user }}"
+    login_password: "{{ mariaDB_pass }}"
+    name: '{{ neutron_db_user }}'
+    priv: '{{ neutron_db }}.*:ALL'
+    password: "{{ neutron_db_pass }}"
+    host: 'localhost'
+    state: present
+
+- name: Set mysql user privileges on neutron to neutron@'%'
+  mysql_user:
+    login_unix_socket: /var/lib/mysql/mysql.sock
+    login_user: "{{ mariaDB_user }}"
+    login_password: "{{ mariaDB_pass }}"
+    name: '{{ neutron_db_user }}'
+    priv: '{{ neutron_db }}.*:ALL'
+    password: "{{ neutron_db_pass }}"
+    host: '%'
+    state: present
+
+- name: Check if neutron user already exists
+  shell: "source ~/admin-openrc && openstack user list"
+  register: neutron_user
+
+- name: Create neutron user
+  shell: "source ~/admin-openrc && openstack user create --domain default --password {{ neutron_os_pass }} neutron"
+  when: neutron_user.stdout.find('neutron') == -1
+
+- name: Check if neutron user has admin role
+  shell: "source ~/admin-openrc && openstack role assignment list --names"
+  register: neutron_role
+
+- name: Add admin role to neutron user
+  shell: "source ~/admin-openrc && openstack role add --project service --user neutron admin"
+  when: neutron_role.stdout.find('admin | neutron@Default') == -1
+
+- name: Check if neutron service already exists
+  shell: "source ~/admin-openrc && openstack service list"
+  register: neutron_service
+
+- name: Create neutron service
+  shell: 'source ~/admin-openrc && openstack service create --name neutron --description "OpenStack Networking" network'
+  when: neutron_service.stdout.find('neutron') == -1
+
+- name: Check if endpoints already exist
+  shell: "source ~/admin-openrc && openstack endpoint list"
+  register: endpoint
+
+- name: Create placement public endpoint
+  shell: "source ~/admin-openrc && openstack endpoint create --region RegionOne network public http://{{ hostvars[groups['control'][0]].ansible_host }}:9696"
+  when: endpoint.stdout.find('public    | http://10.6.19.181:9696') == -1
+
+- name: Create placement internal endpoint
+  shell: "source ~/admin-openrc && openstack endpoint create --region RegionOne network internal http://{{ hostvars[groups['control'][0]].ansible_host }}:9696"
+  when: endpoint.stdout.find('internal  | http://10.6.19.181:9696') == -1
+
+- name: Create placement admin endpoint
+  shell: "source ~/admin-openrc && openstack endpoint create --region RegionOne network admin http://{{ hostvars[groups['control'][0]].ansible_host }}:9696"
+  when: endpoint.stdout.find('admin     | http://10.6.19.181:9696') == -1

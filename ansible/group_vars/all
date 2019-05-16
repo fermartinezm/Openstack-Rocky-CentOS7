@@ -9,24 +9,40 @@ rabbitmq_user: 'openstack'
 admin_pass: admin
 
 
-keystone_user: 'keystone'
-keystone_group: 'keystone'
-
-
 keystone_db_user: 'keystone'
 keystone_db_pass: 'keystone'
+keystone_db: 'keystone'
+
 
 glance_db_user: 'glance'
 glance_db_pass: 'glance'
+glance_db: 'glance'
+
 
 nova_db_user: 'nova'
 nova_db_pass: 'nova'
+nova_db: 'nova'
+nova_api_db: 'nova_api'
+nova_cell0_db: 'nova_cell0'
+
 
 placement_db_user: 'placement'
 placement_db_pass: 'placement'
+placement_db: 'placement'
+
 
 neutron_db_user: 'neutron'
 neutron_db_pass: 'neutron'
+neutron_db: 'neutron'
+
+
+keystone_os_group: 'keystone'
+keystone_os_user: 'keystone'
+glance_os_user: 'glance'
+nova_os_user: 'nova'
+placement_os_user: 'placement'
+neutron_os_user: 'neutron'
+
 
 glance_os_pass: 'glance'
 nova_os_pass: 'nova'
@@ -34,16 +50,19 @@ placement_os_pass: 'placement'
 neutron_os_pass: 'neutron'
 
 
+metadata_secret: 'holahola'
+
+
 # Openvswitch
 ovs_version: 2.11.0
 
 bridge_ex: "br-ex"
-br_ex_address: 10.6.19.181
+br_ex_address: "{{ hostvars[inventory_hostname].public_ip }}"
 br_ex_netmask: 255.255.248.0
 br_ex_gateway: 10.6.16.2
 
 bridge_in: "br-in"
-br_in_address: 192.168.1.181
+br_in_address: "{{ hostvars[inventory_hostname].ansible_host }}"
 br_in_netmask: 255.255.255.0
 
 interface0: "eth0"

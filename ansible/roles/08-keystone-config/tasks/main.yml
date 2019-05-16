@@ -1,0 +1,30 @@
+---
+- name: Create keystone database
+  mysql_db:
+    login_unix_socket: /var/lib/mysql/mysql.sock
+    login_user: "{{ mariaDB_user }}"
+    login_password: "{{ mariaDB_pass }}"
+    name: '{{ keystone_db }}'
+    state: present
+
+- name: Set mysql user privileges on keystone to keystone@localhost
+  mysql_user:
+    login_unix_socket: /var/lib/mysql/mysql.sock
+    login_user: "{{ mariaDB_user }}"
+    login_password: "{{ mariaDB_pass }}"
+    name: "{{ keystone_db_user }}"
+    priv: '{{ keystone_db }}.*:ALL'
+    password: "{{ keystone_db_pass }}"
+    host: 'localhost'
+    state: present
+
+- name: Set mysql user privileges on keystone to keystone@'%'
+  mysql_user:
+    login_unix_socket: /var/lib/mysql/mysql.sock
+    login_user: "{{ mariaDB_user }}"
+    login_password: "{{ mariaDB_pass }}"
+    name: "{{ keystone_db_user }}"
+    priv: '{{ keystone_db }}.*:ALL'
+    password: "{{ keystone_db_pass }}"
+    host: '%'
+    state: present

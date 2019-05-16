@@ -1,0 +1,94 @@
+---
+- name: Install Glance
+  yum:
+    name:  openstack-glance
+    state: present
+    enablerepo: centos-openstack-rocky
+
+- name: Check bck.glance-api.conf file exists
+  stat:
+    path: /etc/glance/bck.glance-api.conf
+  register: bck_glance_api
+
+- name: Backup glance-api.conf file
+  copy:
+    src: /etc/glance/glance-api.conf
+    dest: /etc/glance/bck.glance-api.conf
+    remote_src: yes
+  when: bck_glance_api.stat.exists == false
+
+- name: Delete glance-api.conf file
+  file:
+    path: /etc/glance/glance-api.conf
+    state: absent
+  when: bck_glance_api.stat.exists == false
+
+- name: Create glance-api.conf file 
+  template:
+    src:  glance-api.conf.j2
+    dest: /etc/glance/glance-api.conf
+    owner: root
+    group: glance
+    mode: 0640
+    force: yes
+
+- name: Check bck.glance-registry.conf file exists
+  stat:
+    path: /etc/glance/bck.glance-registry.conf
+  register: bck_glance_registry
+
+- name: Backup glance-registry.conf file
+  copy:
+    src: /etc/glance/glance-registry.conf
+    dest: /etc/glance/bck.glance-registry.conf
+    remote_src: yes
+  when: bck_glance_registry.stat.exists == false
+
+- name: Delete glance-registry.conf file
+  file:
+    path: /etc/glance/glance-registry.conf
+    state: absent
+  when: bck_glance_registry.stat.exists == false
+
+- name: Create glance-registry.conf file 
+  template:
+    src:  glance-registry.conf.j2
+    dest: /etc/glance/glance-registry.conf
+    owner: root
+    group: glance
+    mode: 0640
+    force: yes
+
+- name: glance db sync
+  become: yes
+  become_user: glance
+  shell: >
+    glance-manage db_sync
+  args:
+    executable: /bin/bash
+
+- name: Start and enable httpd service
+  service:
+    name: "{{ item }}"
+    state: started
+    enabled: yes
+  with_items:
+    - openstack-glance-api.service
+    - openstack-glance-registry.service
+
+- name: Set glance_api_can_network flag on and keep it persistent
+  seboolean:
+    name: glance_api_can_network
+    state: yes
+    persistent: yes
+
+- name: Open ports firewalld
+  firewalld:
+    port: "{{ item }}"
+    permanent: yes
+    state: enabled
+  with_items:
+    - 9191/tcp
+    - 9292/udp
+  notify:
+  - Restart firewalld

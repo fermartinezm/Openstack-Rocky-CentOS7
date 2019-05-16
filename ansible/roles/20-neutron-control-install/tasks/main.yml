@@ -1,0 +1,173 @@
+---
+- name: Install Nova
+  yum:
+    name:  ['openstack-neutron','openstack-neutron-ml2']
+    state: present
+    enablerepo: centos-openstack-rocky
+
+- name: Check bck.neutron.conf file exists
+  stat:
+    path: /etc/neutron/bck.neutron.conf
+  register: bck_neutron
+
+- name: Backup neutron.conf file
+  copy:
+    src: /etc/neutron/neutron.conf
+    dest: /etc/neutron/bck.neutron.conf
+    remote_src: yes
+  when: bck_neutron.stat.exists == false
+
+- name: Delete neutron.conf file
+  file:
+    path: /etc/neutron/neutron.conf
+    state: absent
+  when: bck_neutron.stat.exists == false
+
+- name: Create neutron.conf file
+  template:
+    src:  neutron.conf.j2
+    dest: /etc/neutron/neutron.conf
+    owner: root
+    group: neutron
+    mode: 0640
+    force: yes
+
+- name: Check bck.metadata_agent.ini file exists
+  stat:
+    path: /etc/neutron/bck.metadata_agent.ini
+  register: bck_metadata
+
+- name: Backup metadata_agent.ini file
+  copy:
+    src: /etc/neutron/metadata_agent.ini
+    dest: /etc/neutron/bck.metadata_agent.ini
+    remote_src: yes
+  when: bck_metadata.stat.exists == false
+
+- name: Modify metadata_agent.ini file (1)
+  lineinfile:
+    path: /etc/neutron/metadata_agent.ini
+    insertafter: '#nova_metadata_host '
+    line: "nova_metadata_host = {{ hostvars[groups['control'][0]].ansible_host }}"
+
+- name: Modify metadata_agent.ini file (2)
+  lineinfile:
+    path: /etc/neutron/metadata_agent.ini
+    insertafter: '#metadata_proxy_shared_secret'
+    line: 'metadata_proxy_shared_secret = {{ metadata_secret }}'
+
+- name: Modify metadata_agent.ini file (3)
+  lineinfile:
+    path: /etc/neutron/metadata_agent.ini
+    insertafter: '#memcache_servers ='
+    line: "memcache_servers = {{ hostvars[groups['control'][0]].ansible_host }}:11211"
+
+- name: Check bck.ml2_conf.ini file exists
+  stat:
+    path: /etc/neutron/plugins/ml2/bck.ml2_conf.ini
+  register: bck_ml2_conf
+
+- name: Backup ml2_conf.ini file
+  copy:
+    src: /etc/neutron/plugins/ml2/ml2_conf.ini
+    dest: /etc/neutron/plugins/ml2/bck.ml2_conf.ini
+    remote_src: yes
+  when: bck_ml2_conf.stat.exists == false
+
+- name: Modify ml2_conf.ini file (1)
+  lineinfile:
+    path: /etc/neutron/plugins/ml2/ml2_conf.ini
+    insertafter: '#type_drivers = '
+    line: 'type_drivers = flat,vlan,gre,vxlan'
+
+- name: Modify ml2_conf.ini file (2)
+  lineinfile:
+    path: /etc/neutron/plugins/ml2/ml2_conf.ini
+    insertafter: '#tenant_network_types ='
+    line: 'tenant_network_types ='
+
+- name: Modify ml2_conf.ini file (3)
+  lineinfile:
+    path: /etc/neutron/plugins/ml2/ml2_conf.ini
+    insertafter: '#mechanism_drivers ='
+    line: 'mechanism_drivers = openvswitch,l2population'
+
+- name: Modify ml2_conf.ini file (4)
+  lineinfile:
+    path: /etc/neutron/plugins/ml2/ml2_conf.ini
+    insertafter: '#extension_drivers ='
+    line: 'extension_drivers = port_security'
+
+- name: Modify nova.conf file (1)
+  lineinfile:
+     path: /etc/nova/nova.conf
+     insertafter: 'use_neutron = true'
+     line: 'linuxnet_interface_driver = nova.network.linux_net.LinuxOVSInterfaceDriver'
+
+- name: Modify nova.conf file (2)
+  blockinfile:
+    path: /etc/nova/nova.conf
+    block: |
+      [neutron]
+      auth_url = http://{{ hostvars[groups['control'][0]].ansible_host }}:5000
+      auth_type = password
+      project_domain_name = default
+      user_domain_name = default
+      region_name = RegionOne
+      project_name = service
+      username = neutron
+      password = {{ neutron_os_pass }}
+      service_metadata_proxy = True
+      metadata_proxy_shared_secret = {{ metadata_secret }}
+
+- name: Set neutron_can_network flag on and keep it persistent
+  seboolean:
+    name: neutron_can_network
+    state: yes
+    persistent: yes
+
+- name: Set daemons_enable_cluster_mode flag on and keep it persistent
+  seboolean:
+    name: daemons_enable_cluster_mode
+    state: yes
+    persistent: yes
+
+- name: Open ports firewalld for neutron
+  firewalld:
+    port: 9696/tcp
+    permanent: yes
+    state: enabled
+  notify:
+  - Restart firewalld
+
+- name: Create symbolic link
+  file:
+    src: /etc/neutron/plugins/ml2/ml2_conf.ini
+    path: /etc/neutron/plugin.ini
+    state: link
+
+- name: Upgrade head neutron
+  become: yes
+  become_user: neutron
+  changed_when: false
+  shell: >
+    neutron-db-manage --config-file /etc/neutron/neutron.conf --config-file /etc/neutron/plugin.ini upgrade head
+  args:
+    executable: /bin/bash
+
+- name: Start neutron-server service
+  service:
+    name: neutron-server
+    state: started
+    enabled: yes
+
+- name: Start neutron-metadata-agent service
+  service:
+    name: neutron-metadata-agent
+    state: started
+    enabled: yes
+
+- name: Restart openstack-nova-api service
+  service:
+    name: openstack-nova-api
+    state: restarted

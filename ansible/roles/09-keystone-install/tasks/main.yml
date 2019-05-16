@@ -1,0 +1,132 @@
+---
+- name: Install Keystone
+  yum:
+    name: ['openstack-keystone','openstack-utils','python-openstackclient','httpd','mod_wsgi']
+    state: present
+    enablerepo: centos-openstack-rocky
+
+- name: Check if bck.keystone.conf file exists
+  stat:
+    path: /etc/keystone/bck.keystone.conf
+  register: bck_keystone
+
+- name: Backup bck.keystone.conf file
+  copy:
+    src: /etc/keystone/keystone.conf
+    dest: /etc/keystone/bck.keystone.conf
+    remote_src: yes
+  when: bck_keystone.stat.exists == false
+
+- name: Modify keystone.conf file (1)
+  lineinfile:
+    path: /etc/keystone/keystone.conf
+    insertafter: '#memcache_servers = localhost:11211'
+    line: "memcache_servers = {{ hostvars[groups['control'][0]].ansible_host }}:11211"
+
+- name: Modify keystone.conf file (2)
+  lineinfile:
+    path: /etc/keystone/keystone.conf
+    insertafter: '#connection = <None>'
+    line: "connection = mysql+pymysql://{{ keystone_db_user }}:{{ keystone_db_pass }}@{{ hostvars[groups['control'][0]].ansible_host }}/keystone"
+
+- name: Modify keystone.conf file (3)
+  lineinfile:
+    path: /etc/keystone/keystone.conf
+    insertafter: '#provider = fernet'
+    line: 'provider = fernet'
+
+- name: Keystone db sync
+  become: yes
+  become_user: keystone
+  changed_when: false
+  shell: >
+    keystone-manage db_sync
+  args:
+    executable: /bin/bash
+
+- name: Create fernet and credential keys for keystone
+  command: "{{ item }}"
+  with_items:
+   - keystone-manage fernet_setup --keystone-user {{ keystone_os_user }} --keystone-group {{ keystone_os_group }}
+   - keystone-manage credential_setup --keystone-user {{ keystone_os_user }} --keystone-group {{ keystone_os_group }}
+
+- name: Bootstrap keystone
+  command: >
+    keystone-manage bootstrap --bootstrap-password {{ admin_pass }} --bootstrap-admin-url http://{{ hostvars[groups['control'][0]].ansible_host }}:5000/v3/ --bootstrap-internal-url http://{{ hostvars[groups['control'][0]].ansible_host }}:5000/v3/ --bootstrap-public-url http://{{ hostvars[groups['control'][0]].ansible_host }}:5000/v3/ --bootstrap-region-id RegionOne
+
+- name: Modify httpd.conf file
+  lineinfile:
+    path: /etc/httpd/conf/httpd.conf
+    insertafter: '#ServerName www.example.com:80'
+    line: 'ServerName {{ inventory_hostname }}'
+
+- name: Set httpd_use_openstack flag on and keep it persistent
+  seboolean:
+    name: httpd_use_openstack 
+    state: yes
+    persistent: yes
+   
+- name: Set httpd_can_network_connect flag on and keep it persistent
+  seboolean:
+    name: httpd_can_network_connect
+    state: yes
+    persistent: yes
+
+- name: Set httpd_can_network_connect_db flag on and keep it persistent
+  seboolean:
+    name: httpd_can_network_connect_db
+    state: yes
+    persistent: yes
+
+- name: Open ports firewalld
+  firewalld:
+    port: 5000/tcp
+    permanent: yes
+    state: enabled
+  notify:
+  - Restart firewalld
+
+- name: Check if /etc/httpd/conf.d/wsgi-keystone.conf exists
+  stat:
+    path: /etc/httpd/conf.d/wsgi-keystone.conf
+  register: stat_result
+
+- name: Create symbolic link 
+  command: >
+    ln -s /usr/share/keystone/wsgi-keystone.conf /etc/httpd/conf.d
+  when: stat_result.stat.exists == False
+
+#- name: Create symbolic link
+#  file:
+#    src: /usr/share/keystone/wsgi-keystone.conf
+#    path: /etc/httpd/conf.d
+#    state: link
+
+- name: Start and enable httpd service
+  service:
+    name: httpd
+    state: started
+    enabled: yes
+
+- name: Create admin-openrc file 
+  template:
+    src:  admin-openrc.j2
+    dest: ~/admin-openrc
+    owner: root
+    group: root
+    mode: 0644
+    force: yes
+
+- name: Modify keystone.conf file
+  lineinfile:
+    path: ~/.bash_profile
+    insertafter: 'export PATH'
+    line: 'source ~/admin-openrc'
+
+- name: Check if service user already exists
+  shell: "source ~/admin-openrc && openstack project list"
+  register: projects
+
+- name: Create project service in Openstack
+  shell: 'source ~/admin-openrc && openstack project create --domain default --description "Service Project" service'
+  when: projects.stdout.find('service') == -1

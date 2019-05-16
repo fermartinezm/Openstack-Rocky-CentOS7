@@ -1,95 +1,115 @@
 ---
-#- hosts: control
-#  become: true
-#  roles:
-#    - 01-chrony-controller
-#
-#- hosts: nodes
-#  become: true
-#  roles:
-#    - 02-chrony-nodes
-#
-#- hosts: cluster
-#  become: true
-#  roles:
-#    - 03-rocky-packages
-#
-#- hosts: control
-#  become: true
-#  roles:
-#    - 04-mariadb
-#
-#- hosts: control
-#  become: true
-#  roles:
-#    - 05-rabbitmq
-#
-#- hosts: control
-#  become: true
-#  roles:
-#    - 06-memcached
-#
-#- hosts: control
-#  become: true
-#  roles:
-#    - 07-etcd
-#
-#- hosts: control
-#  become: true
-#  roles:
-#    - 08-keystone-install
-#
-#- hosts: control
-#  become: true
-#  roles:
-#    - 09-keystone-config
-#
-#- hosts: control
-#  become: true
-#  roles:
-#    - 10-glance-install
-#
-#- hosts: control
-#  become: true
-#  roles:
-#    - 11-glance-config
-#
-#- hosts: control
-#  become: true
-#  roles:
-#    - 12-nova-control-install
-#
-#- hosts: control
-#  become: true
-#  roles:
-#    - 13-nova-control-config
-#
-#- hosts: nodes
-#  become: true
-#  roles:
-#    - 14-nova-nodes
-#
-#- hosts: control
-#  become: true
-#  roles:
-#    - 15-nodes-discover
-#
-#- hosts: control
-#  become: true
-#  roles:
-#    - 16-ovs-install
-#
-#- hosts: control
-#  become: true
-#  roles:
-#    - 17-ovs-config
+- hosts: control
+  become: true
+  roles:
+    - 01-chrony-controller
 
-#- hosts: control
-#  become: true
-#  roles:
-#    - 18-neutron-install
+- hosts: nocontrol
+  become: true
+  roles:
+    - 02-chrony-nocontrol
+
+- hosts: cluster
+  become: true
+  roles:
+    - 03-rocky-packages
 
 - hosts: control
   become: true
   roles:
-    - 19-neutron-config
+    - 04-mariadb
+
+- hosts: control
+  become: true
+  roles:
+    - 05-rabbitmq
+
+- hosts: control
+  become: true
+  roles:
+    - 06-memcached
+
+- hosts: control
+  become: true
+  roles:
+    - 07-etcd
+
+- hosts: control
+  become: true
+  roles:
+    - 08-keystone-config
+
+- hosts: control
+  become: true
+  roles:
+    - 09-keystone-install
+
+- hosts: control
+  become: true
+  roles:
+    - 10-glance-config
+
+- hosts: control
+  become: true
+  roles:
+    - 11-glance-install
+
+- hosts: control
+  become: true
+  roles:
+    - 12-nova-control-config
+
+- hosts: control
+  become: true
+  roles:
+    - 13-nova-control-install
+
+- hosts: nodes
+  become: true
+  roles:
+    - 14-nova-nodes
+
+- hosts: control
+  become: true
+  roles:
+    - 15-nodes-discover
+
+- hosts: cluster
+  become: true
+  roles:
+    - 16-reboot-cluster
+
+- hosts: nocontrol
+  become: true
+  roles:
+    - 17-ovs-install
+
+- hosts: nocontrol
+  become: true
+  roles:
+    - 18-ovs-config
+
+- hosts: control
+  become: true
+  roles:
+    - 19-neutron-control-config
+
+- hosts: control
+  become: true
+  roles:
+    - 20-neutron-control-install
+
+- hosts: net
+  become: true
+  roles:
+    - 21-neutron-net
+
+- hosts: nodes
+  become: true
+  roles:
+    - 22-neutron-nodes
+
+- hosts: control
+  become: true
+  roles:
+    - 23-horizon

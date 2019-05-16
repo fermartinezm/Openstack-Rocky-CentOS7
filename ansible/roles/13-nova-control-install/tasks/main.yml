@@ -1,0 +1,139 @@
+---
+- name: Install Nova
+  yum:
+    name:  ['openstack-nova-api','openstack-nova-conductor','openstack-nova-console','openstack-nova-novncproxy','openstack-nova-scheduler','openstack-nova-placement-api']
+    state: present
+    enablerepo: centos-openstack-rocky
+
+- name: Check bck.nova.conf file exists
+  stat:
+    path: /etc/nova/bck.nova.conf
+  register: bck_nova
+
+- name: Backup nova.conf file
+  copy:
+    src: /etc/nova/nova.conf
+    dest: /etc/nova/bck.nova.conf
+    remote_src: yes
+  when: bck_nova.stat.exists == false
+
+- name: Delete nova.conf file
+  file:
+    path: /etc/nova/nova.conf
+    state: absent
+  when: bck_nova.stat.exists == false
+
+- name: Create nova.conf file
+  template:
+    src:  nova.conf.j2
+    dest: /etc/nova/nova.conf
+    owner: root
+    group: nova
+    mode: 0640
+    force: yes
+
+- name: Create 00-nova-placement-api.conf file
+  template:
+    src:  00-nova-placement-api.conf.j2
+    dest: /etc/httpd/conf.d/00-nova-placement-api.conf
+    force: yes
+
+- name: Restart httpd service
+  service:
+    name: httpd
+    state: restarted
+
+- name: Nova api_db sync
+  become: yes
+  become_user: nova
+  shell: >
+    nova-manage api_db sync
+  args:
+    executable: /bin/bash
+
+- name: Nova cell_v2 map_cell0
+  become: yes
+  become_user: nova
+  shell: >
+    nova-manage cell_v2 map_cell0
+  args:
+    executable: /bin/bash
+
+- name: Check if cell1 already exists
+  become: yes
+  become_user: nova
+  shell: >
+    nova-manage cell_v2 list_cells
+  args:
+    executable: /bin/bash
+  register: cell1_exists
+
+- name: Nova cell_v2 create_cell --name=cell1 --verbose
+  become: yes
+  become_user: nova
+  shell: >
+    nova-manage cell_v2 create_cell --name=cell1 --verbose
+  args:
+    executable: /bin/bash
+  when: cell1_exists.stdout.find('cell1') == -1
+
+- name: Nova db sync
+  become: yes
+  become_user: nova
+  shell: >
+    nova-manage db sync
+  args:
+    executable: /bin/bash
+
+- name: Start and enable nova-api service
+  service:
+    name: openstack-nova-api.service
+    state: started
+    enabled: yes
+
+- name: Start and enable openstack-nova-consoleauth service
+  service:
+    name: openstack-nova-consoleauth
+    state: started
+    enabled: yes
+
+- name: Start and enable openstack-nova-scheduler.service 
+  service:
+    name: openstack-nova-scheduler.service
+    state: started
+    enabled: yes
+
+- name: Start and enable openstack-nova-conductor.service 
+  service:
+    name: openstack-nova-conductor.service
+    state: started
+    enabled: yes
+
+- name: Start and enable openstack-nova-novncproxy.service
+  service:
+    name: openstack-nova-novncproxy.service
+    state: started
+    enabled: yes
+
+- name: Allow Apache to listen on tcp port 8778
+  seport:
+    ports: 8778
+    proto: tcp
+    setype: http_port_t
+    state: present
+
+- name: Open ports firewalld
+  firewalld:
+    port: "{{ item }}"
+    permanent: yes
+    state: enabled
+  with_items:
+    - 6080/tcp
+    - 6081/tcp
+    - 6082/tcp
+    - 8774/tcp
+    - 8775/tcp
+    - 8778/tcp
+  notify:
+  - Restart firewalld
+
