@@ -1,5 +1,5 @@
 ---
-- name: Install Nova
+- name: Install Neutron
   yum:
     name:  ['openstack-neutron','openstack-neutron-ml2']
     state: present

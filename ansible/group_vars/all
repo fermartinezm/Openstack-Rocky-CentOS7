@@ -36,18 +36,26 @@ neutron_db_pass: 'neutron'
 neutron_db: 'neutron'
 
 
+heat_db_user: 'heat'
+heat_db_pass: 'heat'
+heat_db: 'heat'
+
+
 keystone_os_group: 'keystone'
 keystone_os_user: 'keystone'
 glance_os_user: 'glance'
 nova_os_user: 'nova'
 placement_os_user: 'placement'
 neutron_os_user: 'neutron'
+heat_os_user: 'heat'
 
 
 glance_os_pass: 'glance'
 nova_os_pass: 'nova'
 placement_os_pass: 'placement'
 neutron_os_pass: 'neutron'
+heat_os_pass: 'heat'
+heat_domain_admin_os_pass: 'heat_admin'
 
 
 metadata_secret: 'holahola'

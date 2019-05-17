@@ -1,9 +1,16 @@
 ---
-- name: Edit /etc/resolv.conf
+- name: Edit /etc/resolv.conf (1)
+  lineinfile:
+    path: /etc/resolv.conf
+    line: "nameserver 8.8.4.4"
+    insertafter: EOF
+    state: present
+
+- name: Edit /etc/resolv.conf (2)
   lineinfile:
     path: /etc/resolv.conf
     line: "nameserver 8.8.8.8"
-    insertafter: EOF
+    insertbefore: "nameserver 8.8.4.4"
     state: present
 
 - name: Check bck.ifcfg-{{ interface0 }} file exists
@@ -65,3 +72,9 @@
     dest: /etc/sysconfig/network-scripts/ifcfg-{{ bridge_ex }}
   notify:
   - Restart network
+
+- name: Stop and disable NetworkManager
+  service:
+    name: NetworkManager
+    enabled: no
+    state: stopped

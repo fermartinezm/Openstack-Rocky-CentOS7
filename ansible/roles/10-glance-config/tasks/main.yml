@@ -43,7 +43,7 @@
 
 - name: Add admin role to glance user
   shell: "source ~/admin-openrc && openstack role add --project service --user glance admin"
-  when: role_asssignment.stdout.find('admin | glance@Default') == -1
+  when: role_asssignment.stdout.find('glance@Default') == -1
 
 - name: Check if glance service already exists
   shell: "source ~/admin-openrc && openstack service list"
@@ -59,12 +59,12 @@
 
 - name: Create glance public endpoint
   shell: "source ~/admin-openrc && openstack endpoint create --region RegionOne image public http://{{ hostvars[groups['control'][0]].ansible_host }}:9292"
-  when: glance_endpoint.stdout.find('public    | http://10.6.19.181:9292') == -1
+  when: glance_endpoint.stdout.find(':9292') == -1
 
 - name: Create glance internal endpoint
   shell: "source ~/admin-openrc && openstack endpoint create --region RegionOne image internal http://{{ hostvars[groups['control'][0]].ansible_host }}:9292"
-  when: glance_endpoint.stdout.find('internal  | http://10.6.19.181:9292') == -1
+  when: glance_endpoint.stdout.find(':9292') == -1
 
 - name: Create glance admin endpoint
   shell: "source ~/admin-openrc && openstack endpoint create --region RegionOne image admin http://{{ hostvars[groups['control'][0]].ansible_host }}:9292"
-  when: glance_endpoint.stdout.find('admin     | http://10.6.19.181:9292') == -1
+  when: glance_endpoint.stdout.find(':9292') == -1

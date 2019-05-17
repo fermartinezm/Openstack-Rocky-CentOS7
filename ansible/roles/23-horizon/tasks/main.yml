@@ -28,26 +28,20 @@
     src: local_settings.j2
     dest: /etc/openstack-dashboard/local_settings
     owner: root
-    group: nova
+    group: apache
     mode: 0640
     force: yes
 
-- name: Check if openstack-dashboard.conf file exists
+- name: Check if openstack-dashboard.conf.bck file exists
   stat:
-    path: /etc/openstack-dashboard/bck.local_settings
+    path: /etc/httpd/conf.d/openstack-dashboard.conf.bck
   register: bck_dashboard
 
 - name: Backup openstack-dashboard.conf file
   copy:
     src: /etc/httpd/conf.d/openstack-dashboard.conf
-    dest: /etc/httpd/conf.d/bck.openstack-dashboard.conf
+    dest: /etc/httpd/conf.d/openstack-dashboard.conf.bck
     remote_src: yes
-  when: bck_dashboard.stat.exists == false
-
-- name: Delete openstack-dashboard.conf file
-  file:
-    path: /etc/httpd/conf.d/openstack-dashboard.conf
-    state: absent
   when: bck_dashboard.stat.exists == false
 
 - name: Modify openstack-dashboard.conf
@@ -71,6 +65,17 @@
   service:
     name: httpd.service
     state: restarted
+
+- name: Add https to firewalld
+  firewalld:
+    service: https
+    permanent: yes
+    state: enabled
+
+- name: Add http to firewalld
+  firewalld:
+    service: http
+    permanent: yes
+    state: enabled
   notify:
-    - Add http to firewalld
-    - Add https to firewalld
+    - Restart firewalld

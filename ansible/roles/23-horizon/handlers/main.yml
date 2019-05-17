@@ -1,11 +1,5 @@
-- name: Add https to firewalld
-  firewalld:
-    service: https
-    permanent: yes
-    state: enabled
+- name: Restart firewalld
+  service:
+    name: firewalld
+    state: restarted
 
-- name: Add http to firewalld
-  firewalld:
-    service: http
-    permanent: yes
-    state: enabled

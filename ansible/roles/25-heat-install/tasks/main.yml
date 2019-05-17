@@ -1,0 +1,72 @@
+---
+- name: Install Heat
+  yum:
+    name:  ['openstack-heat-api','openstack-heat-api-cfn',' openstack-heat-engine']
+    state: present
+    enablerepo: centos-openstack-rocky
+
+- name: Check bck.heat.conf file exists
+  stat:
+    path: /etc/heat/bck.heat.conf
+  register: back_up
+
+- name: Backup heat.conf file
+  copy:
+    src: /etc/heat/heat.conf
+    dest: /etc/heat/bck.heat.conf
+    remote_src: yes
+  when: back_up.stat.exists == false
+
+- name: Delete heat.conf file
+  file:
+    path: /etc/heat/heat.conf
+    state: absent
+  when: back_up.stat.exists == false
+
+- name: Create heat.conf file
+  template:
+    src:  heat.conf.j2
+    dest: /etc/heat/heat.conf
+    owner: root
+    group: heat
+    mode: 0640
+    force: yes
+
+- name: Heat api_db sync
+  become: yes
+  become_user: heat
+  shell: >
+    heat-manage db_sync
+  args:
+    executable: /bin/bash
+
+- name: Start and enable openstack-heat-api.service
+  service:
+    name: openstack-heat-api.service
+    state: started
+    enabled: yes
+
+- name: Start and enable openstack-heat-api-cfn.service
+  service:
+    name: openstack-heat-api-cfn.service
+    state: started
+    enabled: yes
+
+- name: Start and enable openstack-heat-engine.service
+  service:
+    name: openstack-heat-engine.service
+    state: started
+    enabled: yes
+
+- name: Open ports firewalld
+  firewalld:
+    port: "{{ item }}"
+    permanent: yes
+    state: enabled
+  with_items:
+    - 8000/tcp
+    - 8004/tcp
+  notify:
+  - Reboot
+
+

@@ -1,0 +1,131 @@
+---
+- name: Create heat database
+  mysql_db:
+    login_unix_socket: /var/lib/mysql/mysql.sock
+    login_user: "{{ mariaDB_user }}"
+    login_password: "{{ mariaDB_pass }}"
+    name: '{{ heat_db }}'
+    state: present
+
+- name: Set mysql user privileges on {{ heat_db }} to heat@localhost
+  mysql_user:
+    login_unix_socket: /var/lib/mysql/mysql.sock
+    login_user: "{{ mariaDB_user }}"
+    login_password: "{{ mariaDB_pass }}"
+    name: '{{ heat_db_user}}'
+    priv: '{{ heat_db }}.*:ALL'
+    password: "{{ heat_db_pass }}"
+    host: 'localhost'
+    state: present
+
+- name: Set mysql user privileges on {{ heat_db }} to heat@'%'
+  mysql_user:
+    login_unix_socket: /var/lib/mysql/mysql.sock
+    login_user: "{{ mariaDB_user }}"
+    login_password: "{{ mariaDB_pass }}"
+    name: '{{ heat_db_user }}'
+    priv: '{{ heat_db }}.*:ALL'
+    password: "{{ heat_db_pass }}"
+    host: '%'
+    state: present
+
+- name: Check if heat user already exists
+  shell: "source ~/admin-openrc && openstack user list"
+  register: heat_user
+
+- name: Create heat user
+  shell: "source ~/admin-openrc && openstack user create --domain default --password {{ heat_os_pass }} heat"
+  when: heat_user.stdout.find('heat ') == -1
+
+- name: Check if heat user has admin role
+  shell: "source ~/admin-openrc && openstack role assignment list --names"
+  register: role_asssignment
+
+- name: Add admin role to heat user
+  shell: "source ~/admin-openrc && openstack role add --project service --user heat admin"
+  when: role_asssignment.stdout.find('heat@Default') == -1
+
+- name: Check if orchestration and cloudformation services already exist
+  shell: "source ~/admin-openrc && openstack service list"
+  register: service
+
+- name: Create heat orchestration service
+  shell: 'source ~/admin-openrc && openstack service create --name heat --description "Orchestration" orchestration'
+  when: service.stdout.find('orchestration') == -1
+
+- name: Create heat cloudformation service
+  shell: 'source ~/admin-openrc && openstack service create --name heat-cfn --description "Orchestration" cloudformation'
+  when: service.stdout.find('cloudformation') == -1
+
+- name: Check if heat endpoints already exist
+  shell: "source ~/admin-openrc && openstack endpoint list"
+  register: endpoints
+
+- name: Create orchestration public endpoint
+  shell: source ~/admin-openrc && openstack endpoint create --region RegionOne orchestration public http://{{ hostvars[groups['control'][0]].ansible_host }}:8004/v1/%\(tenant_id\)s
+  when: endpoints.stdout.find(':8004') == -1
+
+- name: Create orchestration internal endpoint
+  shell: source ~/admin-openrc && openstack endpoint create --region RegionOne orchestration internal http://{{ hostvars[groups['control'][0]].ansible_host }}:8004/v1/%\(tenant_id\)s
+  when: endpoints.stdout.find(':8004') == -1
+
+- name: Create orchestration admin endpoint
+  shell: source ~/admin-openrc && openstack endpoint create --region RegionOne orchestration admin http://{{ hostvars[groups['control'][0]].ansible_host }}:8004/v1/%\(tenant_id\)s
+  when: endpoints.stdout.find(':8004') == -1
+
+- name: Create cloudformation public endpoint
+  shell: "source ~/admin-openrc && openstack endpoint create --region RegionOne cloudformation public http://controller:8000/v1"
+  when: endpoints.stdout.find(':8000') == -1
+
+- name: Create cloudformation internal endpoint
+  shell: "source ~/admin-openrc && openstack endpoint create --region RegionOne cloudformation internal http://controller:8000/v1"
+  when: endpoints.stdout.find(':8000') == -1
+
+- name: Create cloudformation admin endpoint
+  shell: "source ~/admin-openrc && openstack endpoint create --region RegionOne cloudformation admin http://controller:8000/v1"
+  when: endpoints.stdout.find(':8000') == -1
+
+- name: Check if heat domain already exist
+  shell: "source ~/admin-openrc && openstack domain list"
+  register: domain
+
+- name: Create heat domain
+  shell: 'source ~/admin-openrc && openstack domain create --description "Stack projects and users" heat'
+  when: domain.stdout.find('heat') == -1
+
+- name: Check if heat_domain_admin user already exists
+  shell: "source ~/admin-openrc && openstack user list"
+  register: heat_admin_user
+
+- name: Create heat_domain_admin user
+  shell: "source ~/admin-openrc && openstack user create --domain heat --password {{ heat_domain_admin_os_pass }} heat_domain_admin"
+  when: heat_admin_user.stdout.find('heat_domain_admin') == -1
+
+- name: Check if heat_domain_admin user has admin role
+  shell: "source ~/admin-openrc && openstack role assignment list --names"
+  register: heat_admin_asssignment
+
+- name: Add admin role to heat_domain_admin user
+  shell: "source ~/admin-openrc && openstack role add --domain heat --user heat_domain_admin admin"
+  when: heat_admin_asssignment.stdout.find('heat_domain_admin@heat') == -1
+
+- name: Check if heat_stack_owner and heat_stack_user roles already exist
+  shell: "source ~/admin-openrc && openstack role list"
+  register: role_exists
+
+- name: Create heat_stack_owner role
+  shell: "source ~/admin-openrc && openstack role create heat_stack_owner"
+  when: role_exists.stdout.find('heat_stack_owner') == -1
+
+- name: Create heat_stack_user role
+  shell: "source ~/admin-openrc && openstack role create heat_stack_user"
+  when: role_exists.stdout.find('heat_stack_user') == -1
+
+- name: Check if heat_stack_owner role already exists
+  shell: "source ~/admin-openrc && openstack role assignment list --names"
+  register: role_heat_stack
+
+- name: Create heat_stack_owner role to admin user
+  shell: "source ~/admin-openrc && openstack role add --project admin --user admin heat_stack_owner"
+  when: role_heat_stack.stdout.find('heat_stack_owner') == -1
+

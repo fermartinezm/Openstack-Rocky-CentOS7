@@ -1,4 +1,8 @@
 ---
+- name: Wait 30s
+  pause:
+    seconds: 30
+
 - name: Create neutron database
   mysql_db:
     login_unix_socket: /var/lib/mysql/mysql.sock
@@ -43,7 +47,7 @@
 
 - name: Add admin role to neutron user
   shell: "source ~/admin-openrc && openstack role add --project service --user neutron admin"
-  when: neutron_role.stdout.find('admin | neutron@Default') == -1
+  when: neutron_role.stdout.find('neutron@Default') == -1
 
 - name: Check if neutron service already exists
   shell: "source ~/admin-openrc && openstack service list"
@@ -59,12 +63,12 @@
 
 - name: Create placement public endpoint
   shell: "source ~/admin-openrc && openstack endpoint create --region RegionOne network public http://{{ hostvars[groups['control'][0]].ansible_host }}:9696"
-  when: endpoint.stdout.find('public    | http://10.6.19.181:9696') == -1
+  when: endpoint.stdout.find(':9696') == -1
 
 - name: Create placement internal endpoint
   shell: "source ~/admin-openrc && openstack endpoint create --region RegionOne network internal http://{{ hostvars[groups['control'][0]].ansible_host }}:9696"
-  when: endpoint.stdout.find('internal  | http://10.6.19.181:9696') == -1
+  when: endpoint.stdout.find(':9696') == -1
 
 - name: Create placement admin endpoint
   shell: "source ~/admin-openrc && openstack endpoint create --region RegionOne network admin http://{{ hostvars[groups['control'][0]].ansible_host }}:9696"
-  when: endpoint.stdout.find('admin     | http://10.6.19.181:9696') == -1
+  when: endpoint.stdout.find(':9696') == -1

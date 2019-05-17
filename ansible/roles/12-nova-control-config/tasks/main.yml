@@ -103,29 +103,35 @@
     name: "{{ placement_db }}"
     state: present
 
-- name: Set mysql user privileges on placement to placement@localhost
+- name: Set mysql user privileges on placement to nova@'localhost' #placement@'localhost'
   mysql_user:
     login_unix_socket: /var/lib/mysql/mysql.sock
     login_user: "{{ mariaDB_user }}"
     login_password: "{{ mariaDB_pass }}"
+#    name: '{{ nova_db_user }}'
     name: '{{ placement_db_user }}'
     priv: '{{ placement_db }}.*:ALL'
-    password: "{{ placement_db_pass }}"
+    append_privs: yes
+#    password: "{{ nova_db_pass }}"
+    password: '{{ placement_db_pass }}'
     host: 'localhost'
     state: present
 
-- name: Set mysql user privileges on placement to placemet@'%'
+- name: Set mysql user privileges on placement to nova@'%' #placement@'%'
   mysql_user:
     login_unix_socket: /var/lib/mysql/mysql.sock
     login_user: "{{ mariaDB_user }}"
     login_password: "{{ mariaDB_pass }}"
+#    name: '{{ nova_db_user }}'
     name: '{{ placement_db_user }}'
     priv: '{{ placement_db }}.*:ALL'
-    password: "{{ placement_db_pass }}"
+    append_privs: yes
+#    password: "{{ nova_db_pass }}"
+    password: '{{ placement_db_pass }}'
     host: '%'
     state: present
 
-- name: Check if nova user already exists
+- name: Check if nova and placement users already exist
   shell: "source ~/admin-openrc && openstack user list"
   register: user_list
 
@@ -139,7 +145,7 @@
 
 - name: Add admin role to nova user
   shell: "source ~/admin-openrc && openstack role add --project service --user nova admin"
-  when: role_asssignment.stdout.find('admin | nova@Default') == -1
+  when: role_asssignment.stdout.find('nova@Default') == -1
 
 - name: Check if nova service already exists
   shell: "source ~/admin-openrc && openstack service list"
@@ -155,23 +161,19 @@
 
 - name: Create nova public endpoint
   shell: "source ~/admin-openrc && openstack endpoint create --region RegionOne compute public http://{{ hostvars[groups['control'][0]].ansible_host }}:8774/v2.1"
-  when: endpoint.stdout.find('public    | http://10.6.19.181:8774') == -1
+  when: endpoint.stdout.find(':8774') == -1
 
 - name: Create nova internal endpoint
   shell: "source ~/admin-openrc && openstack endpoint create --region RegionOne compute internal http://{{ hostvars[groups['control'][0]].ansible_host }}:8774/v2.1"
-  when: endpoint.stdout.find('internal  | http://10.6.19.181:8774') == -1
+  when: endpoint.stdout.find(':8774') == -1
 
 - name: Create nova admin endpoint
   shell: "source ~/admin-openrc && openstack endpoint create --region RegionOne compute admin http://{{ hostvars[groups['control'][0]].ansible_host }}:8774/v2.1"
-  when: endpoint.stdout.find('admin     | http://10.6.19.181:8774') == -1
-
-- name: Check if placement user already exists
-  shell: "source ~/admin-openrc && openstack user list"
-  register: placement_user
+  when: endpoint.stdout.find(':8774') == -1
 
 - name: Create placement user
   shell: "source ~/admin-openrc && openstack user create --domain default --password {{ placement_os_pass }} placement"
-  when: placement_user.stdout.find('placement') == -1
+  when: user_list.stdout.find('placement') == -1
 
 - name: Check if placement user has admin role
   shell: "source ~/admin-openrc && openstack role assignment list --names"
@@ -179,7 +181,7 @@
 
 - name: Add admin role to placement user
   shell: "source ~/admin-openrc && openstack role add --project service --user placement admin"
-  when: placement_role.stdout.find('admin | placement@Default') == -1
+  when: placement_role.stdout.find('placement@Default') == -1
 
 - name: Check if placement service already exists
   shell: "source ~/admin-openrc && openstack service list"
@@ -191,12 +193,12 @@
 
 - name: Create placement public endpoint
   shell: "source ~/admin-openrc && openstack endpoint create --region RegionOne placement public http://{{ hostvars[groups['control'][0]].ansible_host }}:8778"
-  when: endpoint.stdout.find('public    | http://10.6.19.181:8778') == -1
+  when: endpoint.stdout.find(':8778') == -1
 
 - name: Create placement internal endpoint
   shell: "source ~/admin-openrc && openstack endpoint create --region RegionOne placement internal http://{{ hostvars[groups['control'][0]].ansible_host }}:8778"
-  when: endpoint.stdout.find('internal  | http://10.6.19.181:8778') == -1
+  when: endpoint.stdout.find(':8778') == -1
 
 - name: Create placement admin endpoint
   shell: "source ~/admin-openrc && openstack endpoint create --region RegionOne placement admin http://{{ hostvars[groups['control'][0]].ansible_host }}:8778"
-  when: endpoint.stdout.find('admin     | http://10.6.19.181:8778') == -1
+  when: endpoint.stdout.find(':8778') == -1
