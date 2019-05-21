@@ -41,6 +41,11 @@ heat_db_pass: 'heat'
 heat_db: 'heat'
 
 
+gnocchi_db_user: 'gnocchi'
+gnocchi_db_pass: 'gnocchi'
+gnocchi_db: 'gnocchi'
+
+
 keystone_os_group: 'keystone'
 keystone_os_user: 'keystone'
 glance_os_user: 'glance'
@@ -48,6 +53,8 @@ nova_os_user: 'nova'
 placement_os_user: 'placement'
 neutron_os_user: 'neutron'
 heat_os_user: 'heat'
+gnocchi_os_user: 'gnocchi'
+ceilometer_os_user: 'ceilometer'
 
 
 glance_os_pass: 'glance'
@@ -56,6 +63,8 @@ placement_os_pass: 'placement'
 neutron_os_pass: 'neutron'
 heat_os_pass: 'heat'
 heat_domain_admin_os_pass: 'heat_admin'
+gnocchi_os_pass: 'gnocchi'
+ceilometer_os_pass: 'ceilometer'
 
 
 metadata_secret: 'holahola'

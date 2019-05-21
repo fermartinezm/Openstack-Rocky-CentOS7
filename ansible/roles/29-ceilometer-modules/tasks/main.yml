@@ -1,0 +1,68 @@
+---
+- name: Modify glance-registry.conf file (1)
+  lineinfile:
+    path: /etc/glance/glance-registry.conf
+    insertafter: '[oslo_messaging_notifications]'
+    line: "driver = messagingv2"
+
+- name: Modify glance-registry.conf file (2)
+  lineinfile:
+    path: /etc/glance/glance-registry.conf
+    insertafter: '[DEFAULT]'
+    line: "transport_url = rabbit://{{ rabbitmq_user }}:{{ rabbitmq_pass }}@{{ hostvars[groups['control'][0]].ansible_host }}"
+
+- name: Modify glance-api.conf file (1)
+  lineinfile:
+    path: /etc/glance/glance-api.conf
+    insertafter: '[oslo_messaging_notifications]'
+    line: "driver = messagingv2"
+
+- name: Modify glance-api.conf file (2)
+  lineinfile:
+    path: /etc/glance/glance-api.conf
+    insertafter: '[DEFAULT]'
+    line: "transport_url = rabbit://{{ rabbitmq_user }}:{{ rabbitmq_pass }}@{{ hostvars[groups['control'][0]].ansible_host }}"
+
+- name: Restart openstack-glance-api.service service
+  service:
+    name: openstack-glance-api.service
+    state: restarted
+
+- name: Restart openstack-glance-registry.service service
+  service:
+    name: openstack-glance-registry.service
+    state: restarted
+
+- name: Modify neutron.conf file 
+  lineinfile:
+    path: /etc/neutron/neutron.conf
+    insertafter: '[oslo_messaging_notifications]'
+    line: "driver = messagingv2"
+
+- name: Restart neutron-server service
+  service:
+    name: neutron-server
+    state: restarted
+
+- name: Modify heat.conf file
+  lineinfile:
+    path: /etc/heat/heat.conf
+    insertafter: '[oslo_messaging_notifications]'
+    line: "driver = messagingv2"
+
+- name: Restart openstack-heat-api.service
+  service:
+    name: openstack-heat-api.service
+    state: restarted
+
+- name: Restart openstack-heat-api-cfn.service
+  service:
+    name: openstack-heat-api-cfn.service
+    state: restarted
+
+- name: Restart openstack-heat-engine.service
+  service:
+    name: openstack-heat-engine.service
+    state: restarted
+
+

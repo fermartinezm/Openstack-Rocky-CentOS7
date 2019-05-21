@@ -1,5 +1,5 @@
 ---
-- name: Create heat database
+- name: Create {{ heat_db }} database
   mysql_db:
     login_unix_socket: /var/lib/mysql/mysql.sock
     login_user: "{{ mariaDB_user }}"
@@ -74,15 +74,15 @@
   when: endpoints.stdout.find(':8004') == -1
 
 - name: Create cloudformation public endpoint
-  shell: "source ~/admin-openrc && openstack endpoint create --region RegionOne cloudformation public http://controller:8000/v1"
+  shell: "source ~/admin-openrc && openstack endpoint create --region RegionOne cloudformation public http://{{ hostvars[groups['control'][0]].ansible_host }}:8000/v1"
   when: endpoints.stdout.find(':8000') == -1
 
 - name: Create cloudformation internal endpoint
-  shell: "source ~/admin-openrc && openstack endpoint create --region RegionOne cloudformation internal http://controller:8000/v1"
+  shell: "source ~/admin-openrc && openstack endpoint create --region RegionOne cloudformation internal http://{{ hostvars[groups['control'][0]].ansible_host }}:8000/v1"
   when: endpoints.stdout.find(':8000') == -1
 
 - name: Create cloudformation admin endpoint
-  shell: "source ~/admin-openrc && openstack endpoint create --region RegionOne cloudformation admin http://controller:8000/v1"
+  shell: "source ~/admin-openrc && openstack endpoint create --region RegionOne cloudformation admin http://{{ hostvars[groups['control'][0]].ansible_host }}:8000/v1"
   when: endpoints.stdout.find(':8000') == -1
 
 - name: Check if heat domain already exist

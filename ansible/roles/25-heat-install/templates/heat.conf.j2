@@ -1,5 +1,5 @@
 [database]
-connection = mysql+pymysql://{{ heat_db_user }}:{{ heat_db_pass }}@controller/heat
+connection = mysql+pymysql://{{ heat_db_user }}:{{ heat_db_pass }}@{{ hostvars[groups['control'][0]].ansible_host }}/heat
 
 
 [DEFAULT]
@@ -19,8 +19,8 @@ stack_user_domain_name = heat
 
 
 [keystone_authtoken]
-auth_uri = http://{{ hostvars[groups['control'][0]].ansible_host }}:5000
-auth_url = http://{{ hostvars[groups['control'][0]].ansible_host }}:35357
+www_authenticate_uri = http://{{ hostvars[groups['control'][0]].ansible_host }}:5000
+auth_url = http://{{ hostvars[groups['control'][0]].ansible_host }}:5000
 memcached_servers = {{ hostvars[groups['control'][0]].ansible_host }}:11211
 auth_type = password
 project_domain_name = default
@@ -32,7 +32,7 @@ password = {{ heat_os_pass }}
 
 [trustee]
 auth_type = password
-auth_url = http://{{ hostvars[groups['control'][0]].ansible_host }}:35357
+auth_url = http://{{ hostvars[groups['control'][0]].ansible_host }}:5000
 username = heat
 password = {{ heat_os_pass }}
 user_domain_name = default

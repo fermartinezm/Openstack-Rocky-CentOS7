@@ -1,0 +1,14 @@
+[DEFAULT]
+transport_url = rabbit://{{ rabbitmq_user }}:{{ rabbitmq_pass }}@{{ hostvars[groups['control'][0]].ansible_host }}
+
+
+[service_credentials]
+auth_url = http://{{ hostvars[groups['control'][0]].ansible_host }}:5000
+memcached_servers = {{ hostvars[groups['control'][0]].ansible_host }}:11211
+auth_type = password
+project_domain_name = default
+user_domain_name = default
+project_name = service
+username = ceilometer
+password = {{ ceilometer_os_pass }}
+

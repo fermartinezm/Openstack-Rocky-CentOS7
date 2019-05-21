@@ -1,0 +1,52 @@
+---
+- name: Install Ceilometer
+  yum:
+    name:  openstack-ceilometer-compute
+    state: present
+    enablerepo: centos-openstack-rocky
+
+- name: Check bck.ceilometer.conf file exists
+  stat:
+    path: /etc/ceilometer/bck.ceilometer.conf
+  register: back_up
+
+- name: Backup ceilometer.conf file
+  copy:
+    src: /etc/ceilometer/ceilometer.conf
+    dest: /etc/ceilometer/bck.ceilometer.conf
+    remote_src: yes
+  when: back_up.stat.exists == false
+
+- name: Delete ceilometer.conf file
+  file:
+    path: /etc/ceilometer/ceilometer.conf
+    state: absent
+  when: back_up.stat.exists == false
+
+- name: Create ceilometer.conf file
+  template:
+    src:  ceilometer.conf.j2
+    dest: /etc/ceilometer/ceilometer.conf
+    owner: root
+    group: ceilometer
+    mode: 0640
+    force: yes
+
+- name: Start and enable openstack-ceilometer-compute service
+  service:
+    name: openstack-ceilometer-compute
+    state: started
+    enabled: yes
+
+- name: Modify nova.conf file (1)
+  lineinfile:
+    path: /etc/nova/nova.conf
+    insertafter: '[oslo_messaging_notifications]'
+    line: "driver = messagingv2"
+
+- name: Start openstack-nova-compute service
+  service:
+    name: openstack-nova-compute
+    state: restarted
+
+

@@ -1,0 +1,12 @@
+---
+- name: Start and enable openstack-gnocchi-metricd.service
+  service:
+    name: openstack-gnocchi-metricd.service
+    state: started
+    enabled: yes
+
+- name: Start and enable openstack-gnocchi-api.service
+  service:
+    name: openstack-gnocchi-api.service
+    state: started
+    enabled: yes

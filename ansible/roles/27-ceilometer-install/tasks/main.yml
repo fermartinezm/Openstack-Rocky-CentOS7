@@ -1,0 +1,139 @@
+---
+- name: Install Gnocchi
+  yum:
+    name:  ['openstack-gnocchi-api','openstack-gnocchi-metricd','python-gnocchiclient']
+    state: present
+    enablerepo: centos-openstack-rocky
+
+- name: Check bck.gnocchi.conf file exists
+  stat:
+    path: /etc/gnocchi/bck.gnocchi.conf
+  register: back_gnocchi
+
+- name: Backup gnocchi.conf file
+  copy:
+    src: /etc/gnocchi/gnocchi.conf
+    dest: /etc/gnocchi/bck.gnocchi.conf
+    remote_src: yes
+  when: back_gnocchi.stat.exists == false
+
+- name: Delete gnocchi.conf file
+  file:
+    path: /etc/gnocchi/gnocchi.conf
+    state: absent
+  when: back_gnocchi.stat.exists == false
+
+- name: Create gnocchi.conf file
+  template:
+    src:  gnocchi.conf.j2
+    dest: /etc/gnocchi/gnocchi.conf
+    owner: root
+    group: gnocchi
+    mode: 0640
+    force: yes
+
+- name: Create gnocchi.conf file
+  template:
+    src:  10-gnocchi_wsgi.conf.j2
+    dest: /etc/httpd/conf.d/10-gnocchi_wsgi.conf
+    owner: root
+    group: root
+    mode: 0644
+    force: yes
+
+- name: Gnoochi upgrade
+  become: yes
+  become_user: gnocchi
+  shell: >
+    gnocchi-upgrade
+  args:
+    executable: /bin/bash
+
+- name: Start and enable openstack-gnocchi-metricd.service
+  service:
+    name: openstack-gnocchi-metricd.service
+    state: started
+    enabled: yes
+
+- name: Start and enable openstack-gnocchi-api.service
+  service:
+    name: openstack-gnocchi-api.service
+    state: started
+    enabled: yes
+
+- name: Restart httpd service
+  service:
+    name: httpd
+    state: restarted
+
+- name: Allow Apache to listen on tcp port 8041
+  seport:
+    ports: 8041
+    proto: tcp
+    setype: http_port_t
+    state: present
+
+- name: Open ports firewalld
+  firewalld:
+    port: 8041/tcp
+    permanent: yes
+    state: enabled
+
+- name: Restart firewalld
+  service:
+    name: firewalld
+    state: restarted
+
+- name: Install Ceilometer
+  yum:
+    name:  ['openstack-ceilometer-notification','openstack-ceilometer-central','python2-ceilometerclient']
+    state: present
+    enablerepo: centos-openstack-rocky
+
+- name: Check bck.ceilometer.conf file exists
+  stat:
+    path: /etc/ceilometer/bck.ceilometer.conf
+  register: back_up
+
+- name: Backup ceilometer.conf file
+  copy:
+    src: /etc/ceilometer/ceilometer.conf
+    dest: /etc/ceilometer/bck.ceilometer.conf
+    remote_src: yes
+  when: back_up.stat.exists == false
+
+- name: Delete ceilometer.conf file
+  file:
+    path: /etc/ceilometer/ceilometer.conf
+    state: absent
+  when: back_up.stat.exists == false
+
+- name: Create ceilometer.conf file
+  template:
+    src:  ceilometer.conf.j2
+    dest: /etc/ceilometer/ceilometer.conf
+    owner: root
+    group: ceilometer
+    mode: 0640
+    force: yes
+
+- name: Ceilometer upgrade
+  become: yes
+  become_user: ceilometer
+  shell: >
+    ceilometer-upgrade --skip-metering-database
+  args:
+    executable: /bin/bash
+
+- name: Start and enable openstack-ceilometer-notification service
+  service:
+    name: openstack-ceilometer-notification
+    state: started
+    enabled: yes
+
+- name: Start and enable openstack-ceilometer-central service
+  service:
+    name: openstack-ceilometer-central
+    state: started
+    enabled: yes
+

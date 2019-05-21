@@ -1,0 +1,82 @@
+---
+- name: Wait 30s
+  pause:
+    seconds: 30
+
+- name: Create {{ gnocchi_db }} database
+  mysql_db:
+    login_unix_socket: /var/lib/mysql/mysql.sock
+    login_user: "{{ mariaDB_user }}"
+    login_password: "{{ mariaDB_pass }}"
+    name: '{{ gnocchi_db }}'
+    state: present
+
+- name: Set mysql user privileges on {{ gnocchi_db }} to heat@localhost
+  mysql_user:
+    login_unix_socket: /var/lib/mysql/mysql.sock
+    login_user: "{{ mariaDB_user }}"
+    login_password: "{{ mariaDB_pass }}"
+    name: '{{ gnocchi_db_user}}'
+    priv: '{{ gnocchi_db }}.*:ALL'
+    password: "{{ gnocchi_db_pass }}"
+    host: 'localhost'
+    state: present
+
+- name: Set mysql user privileges on {{ gnocchi_db }} to heat@'%'
+  mysql_user:
+    login_unix_socket: /var/lib/mysql/mysql.sock
+    login_user: "{{ mariaDB_user }}"
+    login_password: "{{ mariaDB_pass }}"
+    name: '{{ gnocchi_db_user }}'
+    priv: '{{ gnocchi_db }}.*:ALL'
+    password: "{{ gnocchi_db_pass }}"
+    host: '%'
+    state: present
+
+- name: Check if gnocchi and ceilometer users already exist
+  shell: "source ~/admin-openrc && openstack user list"
+  register: users
+
+- name: Create ceilometer user
+  shell: "source ~/admin-openrc && openstack user create --domain default --password {{ ceilometer_os_pass }} ceilometer"
+  when: users.stdout.find('ceilometer') == -1
+
+- name: Create gnocchi user
+  shell: "source ~/admin-openrc && openstack user create --domain default --password {{ gnocchi_os_pass }} gnocchi"
+  when: users.stdout.find('gnocchi') == -1
+
+- name: Check if ceilometer and gnocchi users have admin role
+  shell: "source ~/admin-openrc && openstack role assignment list --names"
+  register: role_asssignment
+
+- name: Add admin role to ceilometer user
+  shell: "source ~/admin-openrc && openstack role add --project service --user ceilometer admin"
+  when: role_asssignment.stdout.find('ceilometer@Default') == -1
+
+- name: Add admin role to gnocchi user
+  shell: "source ~/admin-openrc && openstack role add --project service --user gnocchi admin"
+  when: role_asssignment.stdout.find('gnocchi@Default') == -1
+
+- name: Check if metric service already exists
+  shell: "source ~/admin-openrc && openstack service list"
+  register: service
+
+- name: Create gnocchi metric service
+  shell: 'source ~/admin-openrc && openstack service create --name gnocchi --description "Metric Service" metric'
+  when: service.stdout.find('metric') == -1
+
+- name: Check if metric endpoints already exist
+  shell: "source ~/admin-openrc && openstack endpoint list"
+  register: endpoints
+
+- name: Create metric public endpoint
+  shell: "source ~/admin-openrc && openstack endpoint create --region RegionOne metric public http://{{ hostvars[groups['control'][0]].ansible_host }}:8041"
+  when: endpoints.stdout.find(':8041') == -1
+
+- name: Create metric internal endpoint
+  shell: "source ~/admin-openrc && openstack endpoint create --region RegionOne metric internal http://{{ hostvars[groups['control'][0]].ansible_host }}:8041"
+  when: endpoints.stdout.find(':8041') == -1
+
+- name: Create metric admin endpoint
+  shell: "source ~/admin-openrc && openstack endpoint create --region RegionOne metric admin http://{{ hostvars[groups['control'][0]].ansible_host }}:8041"
+  when: endpoints.stdout.find(':8041') == -1

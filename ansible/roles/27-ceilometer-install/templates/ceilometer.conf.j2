@@ -1,0 +1,31 @@
+[DEFAULT]
+transport_url = rabbit://{{ rabbitmq_user }}:{{ rabbitmq_pass }}@{{ hostvars[groups['control'][0]].ansible_host }}
+
+[api]
+auth_mode = keystone
+
+[dispatcher_gnocchi]
+filter_service_activity = False
+
+# Keystone auth info (with gnocchi)
+[keystone_authtoken]
+www_authenticate_uri = http://{{ hostvars[groups['control'][0]].ansible_host }}:5000
+auth_url = http://{{ hostvars[groups['control'][0]].ansible_host }}:5000
+memcached_servers = {{ hostvars[groups['control'][0]].ansible_host }}:11211
+auth_type = password
+project_domain_name = default
+user_domain_name = default
+project_name = service
+username = gnocchi
+password = {{ gnocchi_os_pass }}
+
+# Keystone auth info (with ceilometer)
+[service_credentials]
+auth_url = http://{{ hostvars[groups['control'][0]].ansible_host }}:5000
+memcached_servers = {{ hostvars[groups['control'][0]].ansible_host }}:11211
+auth_type = password
+project_domain_name = default
+user_domain_name = default
+project_name = service
+username = ceilometer
+password = {{ ceilometer_os_pass }}

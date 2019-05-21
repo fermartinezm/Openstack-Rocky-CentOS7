@@ -119,7 +119,27 @@
 #  roles:
 #    - 24-heat-config
 #
+#- hosts: control
+#  become: true
+#  roles:
+#    - 25-heat-install
+#
+#- hosts: control
+#  become: true
+#  roles:
+#    - 26-ceilometer-config
+#
 - hosts: control
   become: true
   roles:
-    - 25-heat-install
+    - 27-ceilometer-install
+
+- hosts: nodes
+  become: true
+  roles:
+    - 28-ceilometer-nodes
+
+- hosts: control
+  become: true
+  roles:
+    - 29-ceilometer-modules
