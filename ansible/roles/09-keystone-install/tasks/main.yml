@@ -44,11 +44,11 @@
   args:
     executable: /bin/bash
 
-- name: Create fernet and credential keys for keystone
-  command: "{{ item }}"
-  with_items:
-   - keystone-manage fernet_setup --keystone-user {{ keystone_os_user }} --keystone-group {{ keystone_os_group }}
-   - keystone-manage credential_setup --keystone-user {{ keystone_os_user }} --keystone-group {{ keystone_os_group }}
+- name: Create fernet key for keystone
+  command: "keystone-manage fernet_setup --keystone-user keystone --keystone-group keystone"
+
+- name: Create credential key for keystone
+  command: "keystone-manage credential_setup --keystone-user keystone --keystone-group keystone"
 
 - name: Bootstrap keystone
   command: >

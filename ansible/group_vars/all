@@ -1,23 +1,19 @@
-mariaDB_user: 'root'
-mariaDB_pass: 'root'
-
-
+# Rabbitmq user and password
 rabbitmq_pass: 'openstack'
 rabbitmq_user: 'openstack'
 
 
-admin_pass: admin
-
+# MariaDB databases, users and passwords
+mariaDB_user: 'root'
+mariaDB_pass: 'root'
 
 keystone_db_user: 'keystone'
 keystone_db_pass: 'keystone'
 keystone_db: 'keystone'
 
-
 glance_db_user: 'glance'
 glance_db_pass: 'glance'
 glance_db: 'glance'
-
 
 nova_db_user: 'nova'
 nova_db_pass: 'nova'
@@ -25,37 +21,26 @@ nova_db: 'nova'
 nova_api_db: 'nova_api'
 nova_cell0_db: 'nova_cell0'
 
-
 placement_db_user: 'placement'
 placement_db_pass: 'placement'
 placement_db: 'placement'
-
 
 neutron_db_user: 'neutron'
 neutron_db_pass: 'neutron'
 neutron_db: 'neutron'
 
-
 heat_db_user: 'heat'
 heat_db_pass: 'heat'
 heat_db: 'heat'
-
 
 gnocchi_db_user: 'gnocchi'
 gnocchi_db_pass: 'gnocchi'
 gnocchi_db: 'gnocchi'
 
 
-keystone_os_group: 'keystone'
-keystone_os_user: 'keystone'
-glance_os_user: 'glance'
-nova_os_user: 'nova'
-placement_os_user: 'placement'
-neutron_os_user: 'neutron'
-heat_os_user: 'heat'
-gnocchi_os_user: 'gnocchi'
-ceilometer_os_user: 'ceilometer'
-
+# Openstack passwords
+admin_pass: admin
+metadata_secret: 'holahola'
 
 glance_os_pass: 'glance'
 nova_os_pass: 'nova'
@@ -65,9 +50,8 @@ heat_os_pass: 'heat'
 heat_domain_admin_os_pass: 'heat_admin'
 gnocchi_os_pass: 'gnocchi'
 ceilometer_os_pass: 'ceilometer'
-
-
-metadata_secret: 'holahola'
+magnum_os_pass: 'magnum'
+magnum_domain_admin_os_pass: 'magnum'
 
 
 # Openvswitch
@@ -75,8 +59,8 @@ ovs_version: 2.11.0
 
 bridge_ex: "br-ex"
 br_ex_address: "{{ hostvars[inventory_hostname].public_ip }}"
-br_ex_netmask: 255.255.248.0
-br_ex_gateway: 10.6.16.2
+br_ex_netmask: 255.255.255.128
+br_ex_gateway: 10.6.71.1
 
 bridge_in: "br-in"
 br_in_address: "{{ hostvars[inventory_hostname].ansible_host }}"

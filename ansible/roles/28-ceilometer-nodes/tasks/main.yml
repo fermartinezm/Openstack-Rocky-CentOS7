@@ -44,7 +44,7 @@
     insertafter: '[oslo_messaging_notifications]'
     line: "driver = messagingv2"
 
-- name: Start openstack-nova-compute service
+- name: Restart openstack-nova-compute service
   service:
     name: openstack-nova-compute
     state: restarted

@@ -137,3 +137,8 @@
     state: started
     enabled: yes
 
+- name: Modify admin-openrc file
+  lineinfile:
+    path: ~/admin-openrc
+    insertafter: 'export OS_IDENTITY_API_VERSION=3'
+    line: "export OS_AUTH_TYPE=password"

@@ -11,7 +11,7 @@
     name: '{{ gnocchi_db }}'
     state: present
 
-- name: Set mysql user privileges on {{ gnocchi_db }} to heat@localhost
+- name: Set mysql user privileges on {{ gnocchi_db }} to gnocchi@localhost
   mysql_user:
     login_unix_socket: /var/lib/mysql/mysql.sock
     login_user: "{{ mariaDB_user }}"
@@ -22,7 +22,7 @@
     host: 'localhost'
     state: present
 
-- name: Set mysql user privileges on {{ gnocchi_db }} to heat@'%'
+- name: Set mysql user privileges on {{ gnocchi_db }} to gnoochi@'%'
   mysql_user:
     login_unix_socket: /var/lib/mysql/mysql.sock
     login_user: "{{ mariaDB_user }}"
