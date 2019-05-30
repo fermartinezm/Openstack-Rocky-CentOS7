@@ -47,4 +47,5 @@ Network: The network and nodes modules are configured as if they have 2 interfac
 <br />
 #    - 04-mariadb
 
+
 - Installation: Run the command `ansible-playbook -i hosts site.yml` inside the ansible directory.
