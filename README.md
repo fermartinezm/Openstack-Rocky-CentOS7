@@ -38,7 +38,7 @@ Network: The network and nodes modules are configured as if they have 2 interfac
 - Configure the file group_vars/all: In this file you can find all the passwords needed for the installation, the network configuration parameters and the network interfaces' names. You need to modify them adapted to your enviroment.
 
 - Removing modules or services from the installation: If you do not want all the modules or services you can modify the file site.yml to remove it from the installation. You only need comment the part related with that module or service. For example, if you want a different database you need to comment the part related with the MariaDB:
-<br />
+
 #- hosts: control
 <br />
 #  become: true
