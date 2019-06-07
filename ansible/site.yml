@@ -72,7 +72,7 @@
 - hosts: control
   become: true
   roles:
-    - 15-nodes-discover
+    - 15-nova-discover-nodes
 
 - hosts: cluster
   become: true
