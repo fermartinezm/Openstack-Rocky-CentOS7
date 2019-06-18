@@ -32,11 +32,60 @@
     mode: 0640
     force: yes
 
-- name: Create 00-nova-placement-api.conf file
-  template:
-    src:  00-nova-placement-api.conf.j2
-    dest: /etc/httpd/conf.d/00-nova-placement-api.conf
-    force: yes
+- name: Modify 00-nova-placement-api.conf file (1)
+  lineinfile:
+    path: /etc/httpd/conf.d/00-nova-placement-api.conf
+    insertbefore: '</VirtualHost>'
+    line: "  </Directory>"
+
+- name: Modify 00-nova-placement-api.conf file (2)
+  lineinfile:
+    path: /etc/httpd/conf.d/00-nova-placement-api.conf
+    insertbefore: '  </Directory>'
+    line: "    </IfVersion>"
+
+- name: Modify 00-nova-placement-api.conf file (3)
+  lineinfile:
+    path: /etc/httpd/conf.d/00-nova-placement-api.conf
+    insertbefore: '    </IfVersion>'
+    line: "      Allow from all"
+
+- name: Modify 00-nova-placement-api.conf file (4)
+  lineinfile:
+    path: /etc/httpd/conf.d/00-nova-placement-api.conf
+    insertbefore: '      Allow from all'
+    line: "      Order allow,deny"
+
+- name: Modify 00-nova-placement-api.conf file (5)
+  lineinfile:
+    path: /etc/httpd/conf.d/00-nova-placement-api.conf
+    insertbefore: '      Order allow,deny'
+    line: "    <IfVersion < 2.4>"
+
+- name: Modify 00-nova-placement-api.conf file (6)
+  lineinfile:
+    path: /etc/httpd/conf.d/00-nova-placement-api.conf
+    insertbefore: '    <IfVersion < 2.4>'
+    line: "  <Directory /usr/bin>"
+
+- name: Modify 00-nova-placement-api.conf file (7)
+  lineinfile:
+    path: /etc/httpd/conf.d/00-nova-placement-api.conf
+    insertafter: '  <Directory /usr/bin>'
+    line: '    <IfVersion >= 2.4>'
+
+- name: Modify 00-nova-placement-api.conf file (8)
+  lineinfile:
+    path: /etc/httpd/conf.d/00-nova-placement-api.conf
+    insertafter: '    <IfVersion >= 2.4>'
+    line: "      Require all granted"
+
+- name: Modify 00-nova-placement-api.conf file (9)
+  lineinfile:
+    firstmatch: yes
+    path: /etc/httpd/conf.d/00-nova-placement-api.conf
+    insertafter: '      Require all granted'
+    line: '    </IfVersion>'
 
 - name: Restart httpd service
   service:
