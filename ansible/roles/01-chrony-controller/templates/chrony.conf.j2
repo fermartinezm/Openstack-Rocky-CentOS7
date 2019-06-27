@@ -23,8 +23,7 @@ rtcsync
 
 # Allow NTP client access from local network.
 #allow 192.168.0.0/16
-allow {{ hostvars[groups['control'][0]].ansible_host }}/24
-allow {{ hostvars[groups['nodes'][0]].ansible_host }}/24
+allow {{ br_in_network }}/{{ br_in_prefix }}
 
 # Serve time even if not synchronized to a time source.
 #local stratum 10

@@ -34,7 +34,7 @@
   register: user_list
 
 - name: Create user glance
-  shell: "source ~/admin-openrc && openstack user create --domain default --password {{ glance_os_pass }} glance"
+  shell: "source ~/admin-openrc && openstack user create --domain default --project service --password {{ glance_os_pass }} glance"
   when: user_list.stdout.find('glance') == -1
 
 - name: Check if glance user has admin role

@@ -1,7 +1,7 @@
 ---
 - name: Install Nova
   yum:
-    name:  ['openstack-nova-api','openstack-nova-conductor','openstack-nova-console','openstack-nova-novncproxy','openstack-nova-scheduler','openstack-nova-placement-api']
+    name:  openstack-nova
     state: present
     enablerepo: centos-openstack-rocky
 
@@ -36,61 +36,46 @@
   lineinfile:
     path: /etc/httpd/conf.d/00-nova-placement-api.conf
     insertbefore: '</VirtualHost>'
-    line: "  </Directory>"
+    line: '  </Directory>'
 
 - name: Modify 00-nova-placement-api.conf file (2)
   lineinfile:
     path: /etc/httpd/conf.d/00-nova-placement-api.conf
     insertbefore: '  </Directory>'
-    line: "    </IfVersion>"
+    line: '    Require all granted'
 
 - name: Modify 00-nova-placement-api.conf file (3)
   lineinfile:
-    path: /etc/httpd/conf.d/00-nova-placement-api.conf
-    insertbefore: '    </IfVersion>'
-    line: "      Allow from all"
-
-- name: Modify 00-nova-placement-api.conf file (4)
-  lineinfile:
-    path: /etc/httpd/conf.d/00-nova-placement-api.conf
-    insertbefore: '      Allow from all'
-    line: "      Order allow,deny"
-
-- name: Modify 00-nova-placement-api.conf file (5)
-  lineinfile:
-    path: /etc/httpd/conf.d/00-nova-placement-api.conf
-    insertbefore: '      Order allow,deny'
-    line: "    <IfVersion < 2.4>"
-
-- name: Modify 00-nova-placement-api.conf file (6)
-  lineinfile:
-    path: /etc/httpd/conf.d/00-nova-placement-api.conf
-    insertbefore: '    <IfVersion < 2.4>'
-    line: "  <Directory /usr/bin>"
-
-- name: Modify 00-nova-placement-api.conf file (7)
-  lineinfile:
-    path: /etc/httpd/conf.d/00-nova-placement-api.conf
-    insertafter: '  <Directory /usr/bin>'
-    line: '    <IfVersion >= 2.4>'
-
-- name: Modify 00-nova-placement-api.conf file (8)
-  lineinfile:
-    path: /etc/httpd/conf.d/00-nova-placement-api.conf
-    insertafter: '    <IfVersion >= 2.4>'
-    line: "      Require all granted"
-
-- name: Modify 00-nova-placement-api.conf file (9)
-  lineinfile:
     firstmatch: yes
     path: /etc/httpd/conf.d/00-nova-placement-api.conf
-    insertafter: '      Require all granted'
-    line: '    </IfVersion>'
+    insertbefore: '    Require all granted'
+    line: '  <Directory /usr/bin>'
 
-- name: Restart httpd service
+- name: Allow Apache to listen on tcp port 8778
+  seport:
+    ports: 8778
+    proto: tcp
+    setype: http_port_t
+    state: present
+
+- name: Open ports firewalld
+  firewalld:
+    port: "{{ item }}"
+    permanent: yes
+    state: enabled
+  with_items:
+    - 6080/tcp
+    - 6081/tcp
+    - 6082/tcp
+    - 8774/tcp
+    - 8775/tcp
+    - 8778/tcp
+
+- name: Restart firewalld service
   service:
-    name: httpd
+    name: firewalld
     state: restarted
+    enabled: yes
 
 - name: Nova api_db sync
   become: yes
@@ -108,6 +93,14 @@
   args:
     executable: /bin/bash
 
+- name: Nova db sync
+  become: yes
+  become_user: nova
+  shell: >
+    nova-manage db sync
+  args:
+    executable: /bin/bash
+
 - name: Check if cell1 already exists
   become: yes
   become_user: nova
@@ -117,22 +110,25 @@
     executable: /bin/bash
   register: cell1_exists
 
-- name: Nova cell_v2 create_cell --name=cell1 --verbose
+- name: Nova cell_v2 create_cell --name=cell1 
   become: yes
   become_user: nova
   shell: >
-    nova-manage cell_v2 create_cell --name=cell1 --verbose
+    nova-manage cell_v2 create_cell --name=cell1 
   args:
     executable: /bin/bash
   when: cell1_exists.stdout.find('cell1') == -1
 
-- name: Nova db sync
-  become: yes
-  become_user: nova
-  shell: >
-    nova-manage db sync
-  args:
-    executable: /bin/bash
+- name: Restart httpd service
+  service:
+    name: httpd
+    state: restarted
+
+- name: Change owner nova-placement-api.log file
+  file:
+    path: /var/log/nova/nova-placement-api.log
+    group: 'nova'
+    owner: 'nova'
 
 - name: Start and enable nova-api service
   service:
@@ -163,26 +159,3 @@
     name: openstack-nova-novncproxy.service
     state: started
     enabled: yes
-
-- name: Allow Apache to listen on tcp port 8778
-  seport:
-    ports: 8778
-    proto: tcp
-    setype: http_port_t
-    state: present
-
-- name: Open ports firewalld
-  firewalld:
-    port: "{{ item }}"
-    permanent: yes
-    state: enabled
-  with_items:
-    - 6080/tcp
-    - 6081/tcp
-    - 6082/tcp
-    - 8774/tcp
-    - 8775/tcp
-    - 8778/tcp
-  notify:
-  - Restart firewalld
-

@@ -11,12 +11,12 @@ www_authenticate_uri = http://{{ hostvars[groups['control'][0]].ansible_host }}:
 auth_url = http://{{ hostvars[groups['control'][0]].ansible_host }}:5000
 memcached_servers = {{ hostvars[groups['control'][0]].ansible_host }}:11211
 auth_type = password
-project_domain_name = default
-user_domain_name = default
+project_domain_name = Default
+user_domain_name = Default
 project_name = service
 username = neutron
 password = {{ neutron_os_pass }}
 
 
 [oslo_concurrency]
-lock_path = /var/lib/neutron/tmp
+lock_path = /var/lib/neutron/lock

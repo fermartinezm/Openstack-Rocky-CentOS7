@@ -67,14 +67,17 @@
   args:
     executable: /bin/bash
 
-- name: Start and enable httpd service
+- name: Start and enable openstack-glance-registry.service
   service:
-    name: "{{ item }}"
+    name: openstack-glance-registry.service
     state: started
     enabled: yes
-  with_items:
-    - openstack-glance-api.service
-    - openstack-glance-registry.service
+
+- name: Start and enable openstack-glance-api.service
+  service:
+    name: openstack-glance-api.service
+    state: started
+    enabled: yes
 
 - name: Set glance_api_can_network flag on and keep it persistent
   seboolean:
@@ -89,6 +92,6 @@
     state: enabled
   with_items:
     - 9191/tcp
-    - 9292/udp
+    - 9292/tcp
   notify:
   - Restart firewalld

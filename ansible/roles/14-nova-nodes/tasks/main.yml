@@ -1,9 +1,15 @@
 ---
-- name: Install nova
+- name: Install nova-compute and qemu
   yum:
-    name:  openstack-nova-compute
+    name:  ['openstack-nova-compute','qemu-kvm','libvirt','virt-install']
     state: present
     enablerepo: centos-openstack-rocky
+
+- name: Start and enable libvirtd service
+  service:
+    name: libvirtd
+    state: started
+    enabled: yes
 
 - name: Check bck.nova.conf file exists
   stat:
@@ -32,7 +38,7 @@
     mode: 0640
     force: yes
 
-- name: Install nova
+- name: Install openstack-selinux
   yum:
     name: openstack-selinux
     state: present

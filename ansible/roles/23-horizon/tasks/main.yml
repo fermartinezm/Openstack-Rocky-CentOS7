@@ -50,21 +50,16 @@
     insertafter: 'WSGISocketPrefix run/wsgi'
     line: "WSGIApplicationGroup %{GLOBAL}"
 
+- name: Restart httpd service
+  service:
+    name: httpd.service
+    state: restarted
+
 - name: Set httpd_can_network_connect flag on and keep it persistent
   seboolean:
     name: httpd_can_network_connect
     state: yes
     persistent: yes
-
-- name: Restart memcached service
-  service:
-    name: memcached.service
-    state: restarted
-
-- name: Restart httpd service
-  service:
-    name: httpd.service
-    state: restarted
 
 - name: Add https to firewalld
   firewalld:

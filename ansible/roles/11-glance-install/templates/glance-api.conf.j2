@@ -8,7 +8,7 @@ filesystem_store_datadir = /var/lib/glance/images/
 
 [database]
 # MariaDB connection info
-connection = mysql+pymysql://{{ glance_db_user }}:{{ glance_db_pass }}@{{ hostvars[groups['control'][0]].ansible_host }}/glance
+connection = mysql+pymysql://{{ glance_db_user }}:{{ glance_db_pass }}@{{ hostvars[groups['control'][0]].ansible_host }}/{{ glance_db }}
 
 # keystone auth info
 [keystone_authtoken]
@@ -16,8 +16,8 @@ www_authenticate_uri = http://{{ hostvars[groups['control'][0]].ansible_host }}:
 auth_url = http://{{ hostvars[groups['control'][0]].ansible_host }}:5000
 memcached_servers = {{ hostvars[groups['control'][0]].ansible_host }}:11211
 auth_type = password
-project_domain_name = default
-user_domain_name = default
+project_domain_name = Default
+user_domain_name = Default
 project_name = service
 username = glance
 password = {{ glance_os_pass }}

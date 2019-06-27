@@ -30,6 +30,14 @@
   notify:
   - Start and enable chronyd.service
 
+- name: Add ntp service firewalld
+  firewalld:
+    service: ntp
+    permanent: yes
+    state: enabled
+  notify:
+  - Restart firewalld
+
 - name: Modify hosts file
   lineinfile:
     dest: /etc/hosts

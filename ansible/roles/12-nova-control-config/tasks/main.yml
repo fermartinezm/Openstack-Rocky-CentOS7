@@ -1,5 +1,5 @@
 ---
-- name: Create nova_api database
+- name: Create {{ nova_api_db }} database
   mysql_db:
     login_unix_socket: /var/lib/mysql/mysql.sock
     login_user: "{{ mariaDB_user }}"
@@ -7,7 +7,7 @@
     name: "{{ nova_api_db }}"
     state: present
 
-- name: Set mysql user privileges on nova_api to nova@localhost
+- name: Set mysql user privileges on {{ nova_api_db }} to nova@localhost
   mysql_user:
     login_unix_socket: /var/lib/mysql/mysql.sock
     login_user: "{{ mariaDB_user }}"
@@ -19,7 +19,7 @@
     host: 'localhost'
     state: present
 
-- name: Set mysql user privileges on nova_api to nova@'%'
+- name: Set mysql user privileges on {{ nova_api_db }} to nova@'%'
   mysql_user:
     login_unix_socket: /var/lib/mysql/mysql.sock
     login_user: "{{ mariaDB_user }}"
@@ -31,7 +31,7 @@
     host: '%'
     state: present
 
-- name: Create nova database
+- name: Create {{ nova_db }} database
   mysql_db:
     login_unix_socket: /var/lib/mysql/mysql.sock
     login_user: "{{ mariaDB_user }}"
@@ -39,7 +39,7 @@
     name: '{{ nova_db }}'
     state: present
 
-- name: Set mysql user privileges on nova to nova@localhost
+- name: Set mysql user privileges on {{ nova_db }} to nova@localhost
   mysql_user:
     login_unix_socket: /var/lib/mysql/mysql.sock
     login_user: "{{ mariaDB_user }}"
@@ -51,7 +51,7 @@
     host: 'localhost'
     state: present
 
-- name: Set mysql user privileges on nova to nova@'%'
+- name: Set mysql user privileges on {{ nova_db }} to nova@'%'
   mysql_user:
     login_unix_socket: /var/lib/mysql/mysql.sock
     login_user: "{{ mariaDB_user }}"
@@ -63,7 +63,7 @@
     host: '%'
     state: present
 
-- name: Create nova_cell0 database
+- name: Create {{ nova_cell0_db }} database
   mysql_db:
     login_unix_socket: /var/lib/mysql/mysql.sock
     login_user: "{{ mariaDB_user }}"
@@ -71,7 +71,7 @@
     name: '{{ nova_cell0_db }}'
     state: present
 
-- name: Set mysql user privileges on nova_cell0 to nova@localhost
+- name: Set mysql user privileges on {{ nova_cell0_db }} to nova@localhost
   mysql_user:
     login_unix_socket: /var/lib/mysql/mysql.sock
     login_user: "{{ mariaDB_user }}"
@@ -83,7 +83,7 @@
     host: 'localhost'
     state: present
 
-- name: Set mysql user privileges on nova_cell0 nova@'%'
+- name: Set mysql user privileges on {{ nova_cell0_db }} nova@'%'
   mysql_user:
     login_unix_socket: /var/lib/mysql/mysql.sock
     login_user: "{{ mariaDB_user }}"
@@ -95,39 +95,35 @@
     host: '%'
     state: present
 
-- name: Create placement database
+- name: Create {{ nova_placement_db }} database
   mysql_db:
     login_unix_socket: /var/lib/mysql/mysql.sock
     login_user: "{{ mariaDB_user }}"
     login_password: "{{ mariaDB_pass }}"
-    name: "{{ placement_db }}"
+    name: "{{ nova_placement_db }}"
     state: present
 
-- name: Set mysql user privileges on placement to nova@'localhost' #placement@'localhost'
+- name: Set mysql user privileges on {{ nova_placement_db }} to nova@'localhost'
   mysql_user:
     login_unix_socket: /var/lib/mysql/mysql.sock
     login_user: "{{ mariaDB_user }}"
     login_password: "{{ mariaDB_pass }}"
-#    name: '{{ nova_db_user }}'
-    name: '{{ placement_db_user }}'
-    priv: '{{ placement_db }}.*:ALL'
+    name: '{{ nova_db_user }}'
+    priv: '{{ nova_placement_db }}.*:ALL'
     append_privs: yes
-#    password: "{{ nova_db_pass }}"
-    password: '{{ placement_db_pass }}'
+    password: "{{ nova_db_pass }}"
     host: 'localhost'
     state: present
 
-- name: Set mysql user privileges on placement to nova@'%' #placement@'%'
+- name: Set mysql user privileges on {{ nova_placement_db }} to nova@'%'
   mysql_user:
     login_unix_socket: /var/lib/mysql/mysql.sock
     login_user: "{{ mariaDB_user }}"
     login_password: "{{ mariaDB_pass }}"
-#    name: '{{ nova_db_user }}'
-    name: '{{ placement_db_user }}'
-    priv: '{{ placement_db }}.*:ALL'
+    name: '{{ nova_db_user }}'
+    priv: '{{ nova_placement_db }}.*:ALL'
     append_privs: yes
-#    password: "{{ nova_db_pass }}"
-    password: '{{ placement_db_pass }}'
+    password: "{{ nova_db_pass }}"
     host: '%'
     state: present
 
@@ -136,7 +132,7 @@
   register: user_list
 
 - name: Create user nova
-  shell: "source ~/admin-openrc && openstack user create --domain default --password {{ nova_os_pass }} nova"
+  shell: "source ~/admin-openrc && openstack user create --domain default --project service --password {{ nova_os_pass }} nova"
   when: user_list.stdout.find('nova') == -1
 
 - name: Check if nova user has admin role

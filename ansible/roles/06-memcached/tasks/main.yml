@@ -10,30 +10,6 @@
     state: started
     enabled: yes
 
-- name: Check if bck.memcached file exists
-  stat:
-    path: /etc/sysconfig/bck.memcached
-  register: bck_memcached
-
-- name: Backup memcached file
-  copy:
-    src: /etc/sysconfig/memcached
-    dest: /etc/sysconfig/bck.memcached
-    remote_src: yes
-  when: bck_memcached.stat.exists == false
-
-- name: Delete memcached file
-  file:
-    path: /etc/sysconfig/memcached
-    state: absent
-  when: bck_memcached.stat.exists == false
-
-- name: Create memcached file
-  template:
-    src:  memcached.j2
-    dest: /etc/sysconfig/memcached
-    force: yes
-
 - name: Open port firewalld
   firewalld:
     port: 11211/tcp

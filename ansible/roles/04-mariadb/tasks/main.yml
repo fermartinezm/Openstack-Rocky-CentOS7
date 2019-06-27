@@ -1,13 +1,13 @@
 ---
-- name: Install mariadb, mariadb-server and python2-PyMySQL
+- name: Install mariadb-server and python2-PyMySQL
   yum:
-    name: ['mariadb','mariadb-server','MySQL-python']
+    name: ['mariadb-server','MySQL-python']
     state: present
 
-- name: Create and edit /etc/my.cnf.d/openstack.cnf file
+- name: Create and edit /etc/my.cnf file
   template:
-    src: openstack.cnf.j2
-    dest: /etc/my.cnf.d/openstack.cnf
+    src: my.cnf.j2
+    dest: /etc/my.cnf
     force: no
 
 - name: Start and enable Mariadb service
@@ -15,6 +15,16 @@
     name: mariadb.service
     state: started
     enabled: yes
+
+- name: Check if /etc/systemd/system/multi-user.target.wants/mariadb.service exists
+  stat:
+    path: /etc/systemd/system/multi-user.target.wants/mariadb.service
+  register: stat_result
+
+- name: Create symbolic link
+  command: >
+    ln -s '/usr/lib/systemd/system/mariadb.service' '/etc/systemd/system/multi-user.target.wants/mariadb.service'
+  when: stat_result.stat.exists == False
 
 - name: Check if root password was set
   shell: mysql -u root -e "show databases;" 

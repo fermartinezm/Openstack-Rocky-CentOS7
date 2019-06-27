@@ -20,10 +20,11 @@ nova_db_pass: 'nova'
 nova_db: 'nova'
 nova_api_db: 'nova_api'
 nova_cell0_db: 'nova_cell0'
+nova_placement_db: 'nova_placement'
 
 placement_db_user: 'placement'
 placement_db_pass: 'placement'
-placement_db: 'placement'
+placement_db: 'nova_placement'
 
 neutron_db_user: 'neutron'
 neutron_db_pass: 'neutron'
@@ -57,14 +58,16 @@ magnum_domain_admin_os_pass: 'magnum'
 # Openvswitch
 ovs_version: 2.11.0
 
-bridge_ex: "br-ex"
+bridge_ex: "br-ext"
 br_ex_address: "{{ hostvars[inventory_hostname].public_ip }}"
 br_ex_netmask: 255.255.255.128
 br_ex_gateway: 10.6.71.1
 
-bridge_in: "br-in"
+bridge_in: "br-int"
 br_in_address: "{{ hostvars[inventory_hostname].ansible_host }}"
 br_in_netmask: 255.255.255.0
+br_in_network: 192.168.1.0
+br_in_prefix: 24
 
 interface0: "eth0"
 interface1: "eth1"

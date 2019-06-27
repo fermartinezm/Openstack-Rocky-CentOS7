@@ -1,12 +1,20 @@
 ---
-#- name: Wait 10s
-#  pause:
-#    seconds: 10
+#- name: Check computes nodes
+#  shell: >
+#    source ~/admin-openrc && openstack compute service list
+#  register: result
+#  until: result.stdout.find("None") != -1
+#  retries: 10
+#  delay: 2
+
+- name: Pause 10 secs
+  pause:
+    seconds: 10
 
 - name: Discover computer host
   become: yes
   become_user: nova
   shell: >
-    nova-manage cell_v2 discover_hosts --verbose
+    nova-manage cell_v2 discover_hosts
   args:
     executable: /bin/bash
