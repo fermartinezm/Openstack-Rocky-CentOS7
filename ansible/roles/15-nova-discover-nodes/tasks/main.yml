@@ -1,15 +1,11 @@
 ---
-#- name: Check computes nodes
-#  shell: >
-#    source ~/admin-openrc && openstack compute service list
-#  register: result
-#  until: result.stdout.find("None") != -1
-#  retries: 10
-#  delay: 2
-
-- name: Pause 10 secs
-  pause:
-    seconds: 10
+- name: Check computes nodes
+  shell: >
+    source ~/admin-openrc && openstack compute service list
+  register: result
+  until: not result.stdout.find("None") != -1
+  retries: 60
+  delay: 3
 
 - name: Discover computer host
   become: yes

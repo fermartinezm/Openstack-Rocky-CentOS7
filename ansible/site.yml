@@ -74,72 +74,67 @@
   roles:
     - 15-nova-discover-nodes
 
-- hosts: cluster
+- hosts: nocontrol
   become: true
   roles:
-    - 16-reboot-cluster
+    - 16-ovs-install
 
 - hosts: nocontrol
   become: true
   roles:
-    - 17-ovs-install
-
-- hosts: nocontrol
-  become: true
-  roles:
-    - 18-ovs-config
+    - 17-ovs-config
 
 - hosts: control
   become: true
   roles:
-    - 19-neutron-control-config
+    - 18-neutron-control-config
 
 - hosts: control
   become: true
   roles:
-    - 20-neutron-control-install
+    - 19-neutron-control-install
 
 - hosts: net
   become: true
   roles:
-    - 21-neutron-net
+    - 20-neutron-net
 
 - hosts: nodes
   become: true
   roles:
-    - 22-neutron-nodes
+    - 21-neutron-nodes
 
 - hosts: control
   become: true
   roles:
-    - 23-horizon
+    - 22-horizon
 
-#- hosts: control
-#  become: true
-#  roles:
-#    - 24-heat-config
-#
-#- hosts: control
-#  become: true
-#  roles:
-#    - 25-heat-install
-#
-#- hosts: control
-#  become: true
-#  roles:
-#    - 26-ceilometer-config
-#
-#- hosts: control
-#  become: true
-#  roles:
-#    - 27-ceilometer-install
-#
-#- hosts: nodes
-#  become: true
-#  roles:
-#    - 28-ceilometer-nodes
-#
-#- hosts: control
-#  become: true
-#  roles:
-#    - 29-ceilometer-modules
+- hosts: control
+  become: true
+  roles:
+    - 23-heat-config
+
+- hosts: control
+  become: true
+  roles:
+    - 24-heat-install
+
+- hosts: control
+  become: true
+  roles:
+    - 25-ceilometer-config
+
+- hosts: control
+  become: true
+  roles:
+    - 26-ceilometer-install
+
+- hosts: nodes
+  become: true
+  roles:
+    - 27-ceilometer-nodes
+
+- hosts: control
+  become: true
+  roles:
+    - 28-ceilometer-modules
