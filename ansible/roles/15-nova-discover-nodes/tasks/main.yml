@@ -1,10 +1,10 @@
 ---
-- name: Check computes nodes
+- name: Wait until computes nodes are ready
   shell: >
     source ~/admin-openrc && openstack compute service list
   register: result
   until: not result.stdout.find("None") != -1
-  retries: 60
+  retries: 120
   delay: 3
 
 - name: Discover computer host
