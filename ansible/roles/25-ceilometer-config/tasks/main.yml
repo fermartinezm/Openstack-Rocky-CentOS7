@@ -1,8 +1,4 @@
 ---
-- name: Wait 30s
-  pause:
-    seconds: 30
-
 - name: Create {{ gnocchi_db }} database
   mysql_db:
     login_unix_socket: /var/lib/mysql/mysql.sock

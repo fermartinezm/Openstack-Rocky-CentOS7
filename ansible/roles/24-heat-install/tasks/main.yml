@@ -66,7 +66,5 @@
   with_items:
     - 8000/tcp
     - 8004/tcp
-
-- name: Reboot
-  reboot:
-
+  notify:
+    - Restart firewalld
