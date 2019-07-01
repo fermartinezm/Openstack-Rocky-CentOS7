@@ -8,7 +8,7 @@ In this proyect you can find the deployment of Openstack, Rocky version, on Cent
 - Heat
 - Celiometer
 
-Besides the modules Openstack also needs some services. The services installed are:
+Besides the modules, Openstack also needs some services. The services installed are:
 - Chrony
 - MariaDB
 - RabbitMQ
