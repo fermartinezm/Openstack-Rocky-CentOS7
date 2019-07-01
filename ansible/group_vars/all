@@ -58,12 +58,12 @@ magnum_domain_admin_os_pass: 'magnum'
 # Openvswitch
 ovs_version: 2.11.0
 
-bridge_ex: "br-ext"
+bridge_ex: "br-ex"
 br_ex_address: "{{ hostvars[inventory_hostname].public_ip }}"
 br_ex_netmask: 255.255.255.128
 br_ex_gateway: 10.6.71.1
 
-bridge_in: "br-int"
+bridge_in: "br-in"
 br_in_address: "{{ hostvars[inventory_hostname].ansible_host }}"
 br_in_netmask: 255.255.255.0
 br_in_network: 192.168.1.0
