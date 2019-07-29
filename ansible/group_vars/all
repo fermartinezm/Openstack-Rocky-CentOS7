@@ -51,8 +51,6 @@ heat_os_pass: 'heat'
 heat_domain_admin_os_pass: 'heat_admin'
 gnocchi_os_pass: 'gnocchi'
 ceilometer_os_pass: 'ceilometer'
-magnum_os_pass: 'magnum'
-magnum_domain_admin_os_pass: 'magnum'
 
 
 # Openvswitch
